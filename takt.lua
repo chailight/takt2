@@ -892,7 +892,7 @@ function init()
     ui.init()
 
     sequencer_metro = metro.init()
-    if params::string("clock_source") == "internal" then
+    if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params::set("clock_tempo", data[data.pattern].bpm 
         sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
