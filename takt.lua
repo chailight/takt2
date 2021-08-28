@@ -523,7 +523,7 @@ local function advance_step(tr, counter)
 end
 
 local function seqrun(counter)
-  print("counter: ", counter)
+  --print("counter: ", counter)
   for tr = 1, 14 do
 
       local div = data[data.pattern].track.div[tr]
@@ -928,7 +928,7 @@ function init()
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
-        print("internal bpm ", data[data.pattern].bpm)
+        --print("internal bpm ", data[data.pattern].bpm)
 
         -- if sequencer is now a clock function no need to set
         --sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
@@ -958,7 +958,7 @@ function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
         clock.sync(1/128)
-        print(clock.get_tempo())
+        --print(clock.get_tempo())
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
             metaseq() 
