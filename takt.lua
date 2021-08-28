@@ -1,4 +1,4 @@
--- takt v2.3b
+-- takt v2.3b development
 -- @its_your_bedtime
 -- 
 -- parameter locking sequencer
