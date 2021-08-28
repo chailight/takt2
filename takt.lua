@@ -530,9 +530,9 @@ local function seqrun(counter)
 
       local div = data[data.pattern].track.div[tr]
       
-      if (div ~= 6 and counter % dividers[div] == 0) 
-      or (div == 6 and counter % dividers[div] >= 0.5) then
-      --if true then
+      --if (div ~= 6 and counter % dividers[div] == 0) 
+      --or (div == 6 and counter % dividers[div] >= 0.5) then
+      if true then
 
         advance_step(tr, counter)
         
@@ -962,7 +962,7 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
-        clock.sync(1/128)
+        clock.sync(1/4)
         --print(clock.get_tempo())
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
