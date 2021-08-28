@@ -206,7 +206,7 @@ local function load_project(pth)
     end
   end
   --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback,1)
+  redraw_clock = clock.run(redraw_callback)
 end
 
 local function save_project(txt)
@@ -225,7 +225,7 @@ local function save_project(txt)
     print("save cancel")
   end
   --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback,1)
+  redraw_clock = clock.run(redraw_callback)
 end
 
 -- views
@@ -497,7 +497,7 @@ local function change_pattern(pt)
     data.pattern = pt
 end
 
-local function metaseq(stage)
+local function metaseq()
     if data[data.pattern].track.pos[1] == data[data.pattern].track.len[1] - 1 then
       
         if ptn_change_pending then
@@ -826,7 +826,7 @@ local controls = {
           notes_off_midi()
         else 
           --sequencer_metro:start() 
-          sequencer_clock = clock.run(sequencer,1)
+          sequencer_clock = clock.run(sequencer)
           is_running = 1
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
@@ -915,7 +915,8 @@ function init()
     -- change metro to be a clock routine rather than a metro?
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.create(sequencer,1)
+    sequencer_clock = clock.run(sequencer)
+    clock.cancel(sequencer_clock)
     is_running = 0
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
@@ -929,7 +930,7 @@ function init()
     --redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
     --redraw_clock = clock.create(redraw_callback(1))
     --redraw_metro:start()
-    redraw_clock = clock.run(redraw_callback,1)
+    redraw_clock = clock.run(redraw_callback)
     -- midi_clock = beatclock:new()
     -- midi_clock.on_step = function() end
     -- this pulse function may not be needed - maybe replace the metro events with clock call back functions?
@@ -944,21 +945,21 @@ function init()
     -- midi_clock.send = false
 end
 
-function sequencer(stage)
+function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while true do
         clock.sync(1/8)
-        seqrun(stage) 
-        if stage % m_div(data.metaseq.div) == 0 then 
-            metaseq(stage) 
-        end 
+        seqrun() 
+        --if stage % m_div(data.metaseq.div) == 0 then 
+        --    metaseq() 
+        --end 
     end
 end
 
-function redraw_callback(stage) 
+function redraw_callback() 
     while true do
         clock.sync(1/30)
-        redraw(stage) 
+        redraw() 
         g:redraw() 
         blink = (blink + 1) % 17 
     end
@@ -966,7 +967,7 @@ end
 
 function clock.transport.start()
   -- print("we begin")
-  sequencer_clock = clock.run(sequencer,1)
+  sequencer_clock = clock.run(sequencer)
   is_running = 1
 end
 
@@ -1102,7 +1103,7 @@ function key(n,z)
   end
 end
 
-function redraw(stage)
+function redraw()
 
   local tr = data.selected[1]
   local pos = data[data.pattern].track.pos[tr]
@@ -1124,7 +1125,8 @@ function redraw(stage)
     local pos = sampler.get_pos()
     ui.sampling(sampler, data.ui_index, pos)
   elseif view.patterns then 
-    ui.patterns(data.pattern, data.metaseq, data.ui_index, stage)
+    --ui.patterns(data.pattern, data.metaseq, data.ui_index, stage)
+    ui.patterns(data.pattern, data.metaseq, data.ui_index, 1)
   else
     if data.selected[1] < 8 then
       local meta = timber.get_meta(redraw_params[1].sample)
