@@ -916,8 +916,8 @@ function init()
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
     sequencer_clock = clock.run(sequencer)
-    clock.cancel(sequencer_clock)
-    is_running = 0
+    --clock.cancel(sequencer_clock)
+    is_running = 1
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
