@@ -968,7 +968,7 @@ function sequencer()
         if clock.get_beats() % m_div(data.metaseq.div) == 0 then 
             metaseq() 
         end 
-        //stage = (stage + 1) 
+        --stage = (stage + 1) 
     end
 end
 
