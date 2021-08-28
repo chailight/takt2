@@ -962,7 +962,7 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
-        clock.sync(1/4)
+        clock.sync(1/128)
         --print(clock.get_tempo())
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
