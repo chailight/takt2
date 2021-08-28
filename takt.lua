@@ -137,11 +137,11 @@ local prev_level_val = 0
 
 local function comp_shut(state)
     if state then
-        print('run')
+        --print('run')
         params:set('comp_mix', prev_mix_val)
         params:set('comp_level', prev_level_val)
     elseif not state then 
-        print('stop')
+        --print('stop')
         prev_mix_val = params:get('comp_mix')
         prev_level_val = params:get('comp_level')
         params:set('comp_mix', -1)
@@ -822,6 +822,7 @@ local controls = {
           --sequencer_metro:stop() 
           clock.cancel(sequencer_clock)
           is_running = 0
+          print("stop")
           -- send a midi stop message if clock is internal?
           -- midi_clock:stop()
           notes_off_midi()
@@ -829,6 +830,7 @@ local controls = {
           --sequencer_metro:start() 
           sequencer_clock = clock.run(sequencer)
           is_running = 1
+          print("run")
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
           --clock.run(pulse) -- this may not be needed
@@ -917,8 +919,8 @@ function init()
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
     sequencer_clock = clock.run(sequencer)
-    clock.cancel(sequencer_clock)
-    is_running = 0
+    --clock.cancel(sequencer_clock)
+    is_running = 1
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
