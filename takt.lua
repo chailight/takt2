@@ -3,7 +3,7 @@
 -- 
 -- parameter locking sequencer
 --
--- modified to use global clock by @chailight
+-- global clock updates by @chailight
 
 local sampler = include('lib/sampler')
 local browser = include('lib/browser')
@@ -916,9 +916,9 @@ function init()
     -- change metro to be a clock routine rather than a metro?
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.run(sequencer)
-    --clock.cancel(sequencer_clock)
-    is_running = 1
+    sequencer_clock = clock.create(sequencer)
+    clock.cancel(sequencer_clock)
+    is_running = 0
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
@@ -949,12 +949,12 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while true do
-        clock.sync(1/8)
+        clock.sync(1/16)
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
             metaseq() 
         end 
-        stage = (stage + 1) % 16
+        stage = (stage + 1) % 15
     end
 end
 
