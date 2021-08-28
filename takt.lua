@@ -22,8 +22,8 @@ local REC_CC = 38
 --
 local sequencer_clock = 0
 local redraw_clock = 0
-is_running = 0
-stage = 0
+is_running = false 
+--stage = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -168,9 +168,10 @@ end
 local function load_project(pth)
   
   --sequencer_metro:stop() 
-  clock.cancel(sequencer_clock)
-  print("stop")
-  is_running = 0
+  --clock.cancel(sequencer_clock)
+  --print("stop")
+  --is_running = 0
+  clock.transport.stop()
   -- midi_clock:stop()
   engine.noteOffAll()
   --redraw_metro:stop()
@@ -213,9 +214,10 @@ end
 
 local function save_project(txt)
   --sequencer_metro:stop() 
-  clock.cancel(sequencer_clock)
-  print("stop")
-  is_running = 0
+  --clock.cancel(sequencer_clock)
+  --print("stop")
+  --is_running = 0
+  clock.transport.stop()
   -- midi_clock:stop()
   --redraw_metro:stop()
   clock.cancel(redraw_clock)
@@ -528,8 +530,9 @@ local function seqrun(counter)
 
       local div = data[data.pattern].track.div[tr]
       
-      if (div ~= 6 and counter % dividers[div] == 0) 
-      or (div == 6 and counter % dividers[div] >= 0.5) then
+      --if (div ~= 6 and counter % dividers[div] == 0) 
+      --or (div == 6 and counter % dividers[div] >= 0.5) then
+      if true then
 
         advance_step(tr, counter)
         
@@ -823,17 +826,19 @@ local controls = {
       if z == 1 then
         if is_running then 
           --sequencer_metro:stop() 
-          print("control stop")
-          is_running = 0
-          clock.cancel(sequencer_clock)
+          --print("control stop")
+          --is_running = 0
+          --clock.cancel(sequencer_clock)
+          clock.transport.stop()
           -- send a midi stop message if clock is internal?
           -- midi_clock:stop()
           notes_off_midi()
         else 
           --sequencer_metro:start() 
-          print("control: run")
-          is_running = 1
-          sequencer_clock = clock.run(sequencer)
+          --print("control: run")
+          --is_running = 1
+          --sequencer_clock = clock.run(sequencer)
+          clock.transport.run()
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
           --clock.run(pulse) -- this may not be needed
@@ -957,13 +962,13 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
-        clock.sync(1/128)
+        clock.sync(1/4)
         --print(clock.get_tempo())
-        seqrun(stage) 
-        if stage % m_div(data.metaseq.div) == 0 then 
+        seqrun(clock.get_beats()) 
+        if clock.get_beats() % m_div(data.metaseq.div) == 0 then 
             metaseq() 
         end 
-        stage = (stage + 1) 
+        //stage = (stage + 1) 
     end
 end
 
@@ -980,13 +985,13 @@ function clock.transport.start()
   -- print("we begin")
   sequencer_clock = clock.run(sequencer)
   print("transport: run")
-  is_running = 1
+  is_running = true 
 end
 
 function clock.transport.stop()
   clock.cancel(sequencer_clock)
   print("transport: stop")
-  is_running = 0
+  is_running = false 
 end
 
 function enc(n,d)
