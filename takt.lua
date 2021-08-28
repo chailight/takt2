@@ -525,7 +525,7 @@ local function advance_step(tr, counter)
 end
 
 local function seqrun(counter)
-  --print("counter: ", counter)
+  print("counter: ", counter)
   for tr = 1, 14 do
 
       local div = data[data.pattern].track.div[tr]
