@@ -19,6 +19,9 @@ local textentry = require('textentry')
 local midi_out_devices = {}
 local REC_CC = 38
 --
+local sequencer_clock = 0
+local redraw_clock = 0
+local is_running = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -162,11 +165,14 @@ end
 
 local function load_project(pth)
   
-  sequencer_metro:stop() 
+  --sequencer_metro:stop() 
+  clock.cancel(sequencer_clock)
+  is_running = 0
   -- midi_clock:stop()
   engine.noteOffAll()
-  redraw_metro:stop()
-  comp_shut(sequencer_metro.is_running)
+  --redraw_metro:stop()
+  clock.cancel(redraw_clock)
+  comp_shut(is_running)
 
   if string.find(pth, '.tkt') ~= nil then
     local saved = tab.load(pth)
@@ -198,22 +204,27 @@ local function load_project(pth)
         print("no data")
     end
   end
-  redraw_metro:start()
+  --redraw_metro:start()
+  redraw_clock = clock.run(redraw_callback)
 end
 
 local function save_project(txt)
-  sequencer_metro:stop() 
+  --sequencer_metro:stop() 
+  clock.cancel(sequencer_clock)
+  is_running = 0
   -- midi_clock:stop()
-  redraw_metro:stop()
+  --redraw_metro:stop()
+  clock.cancel(redraw_clock)
   engine.noteOffAll()
-  comp_shut(sequencer_metro.is_running)
+  comp_shut(is_running)
   if txt then
     tab.save({ txt, data }, norns.state.data .. txt ..".tkt")
     params:write( norns.state.data .. txt .. ".pset")
   else
     print("save cancel")
   end
-  redraw_metro:start()
+  --redraw_metro:start()
+  redraw_clock = clock.run(redraw_callback)
 end
 
 -- views
@@ -379,9 +390,12 @@ local function set_div(tr, div)
 end
 
 local function set_bpm(n)
-    data[data.pattern].bpm = n
-    params:set("clock_tempo",n)
-    sequencer_metro.time = 60 / (clock.get_tempo() * 2)  / 16 --[[ppqn]] / 4 
+    if params:string("clock_source") == "internal" then
+        data[data.pattern].bpm = n
+        params:set("clock_tempo",n)
+        -- no longer need to set sequencer_metro if it runs off the clock?
+        --sequencer_metro.time = 60 / (clock.get_tempo() * 2)  / 16 --[[ppqn]] / 4 
+    end
     -- midi_clock:bpm_change( util.round(data[data.pattern].bpm / midi_dividers[util.clamp(data[data.pattern].sync_div, 1, 7)]))
 end
 
@@ -584,7 +598,7 @@ local function midi_event(d)
     if not view.sampling then
       engine.noteOff(tr)
       engine.noteOn(tr, music.note_num_to_freq(msg.note), msg.vel / 127, data[data.pattern][tr].params[tostring(tr)].sample)
-      if sequencer_metro.is_running and PATTERN_REC then
+      if is_running and PATTERN_REC then
         place_note(tr, pos, msg.note)
       end
     end
@@ -802,24 +816,30 @@ local trig_params = {
 local controls = {
   [1] = function(z) -- start / stop, 
       if z == 1 then
-        if sequencer_metro.is_running then 
-          sequencer_metro:stop() 
+        if is_running then 
+          --sequencer_metro:stop() 
+          clock.cancel(sequencer_clock)
+          is_running = 0
+          -- send a midi stop message if clock is internal?
           -- midi_clock:stop()
           notes_off_midi()
         else 
-          sequencer_metro:start() 
+          --sequencer_metro:start() 
+          sequencer_clock = clock.run(sequencer)
+          is_running = 1
+          -- send a midi start message if clock is internal?
           -- midi_clock:start()
-          clock.run(pulse) -- this may not be needed
+          --clock.run(pulse) -- this may not be needed
         end
         if MOD then
           engine.noteOffAll() 
           reset_positions()
           kill_all_midi()
         end
-        comp_shut(sequencer_metro.is_running)
+        comp_shut(is_running)
       end
     end,
-  [3] = function(z)  if view.notes_input and z == 1 and sequencer_metro.is_running then PATTERN_REC = not PATTERN_REC end end,
+  [3] = function(z)  if view.notes_input and z == 1 and is_running then PATTERN_REC = not PATTERN_REC end end,
   [5] = function(z)  if z == 1 then if not view.notes_input then set_view('steps_engine') PATTERN_REC = false end tr_change(1)  end end,
   [6] = function(z)  if z == 1 then  if not view.notes_input then set_view('steps_midi') PATTERN_REC = false end tr_change(8)  end end,
   [8] = function(z)  if z == 1 then set_view(view.notes_input and (data.selected[1] < 8 and 'steps_engine' or 'steps_midi') or 'notes_input') end end,
@@ -891,29 +911,63 @@ function init()
     sampler.init()
     ui.init()
 
-    sequencer_metro = metro.init()
+    -- change metro to be a clock routine rather than a metro?
+    --sequencer_metro = metro.init()
+    --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
+    sequencer_clock = clock.create(sequencer)
+    is_running = 0
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
-        sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
+        -- if sequencer is now a clock function no need to set
+        --sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
     end
 
-    sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
+    --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
 
-    redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
-    redraw_metro:start()
+    --redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
+    redraw_clock = clock.create(redraw_callback)
+    --redraw_metro:start()
+    clock.run(redraw_clock)
     -- midi_clock = beatclock:new()
     -- midi_clock.on_step = function() end
     -- this pulse function may not be needed - maybe replace the metro events with clock call back functions?
-    function pulse()
-        while true do
-            clock.sync(1/4)
-            iterate()
-        end
-    end
+    --function pulse()
+    --    while true do
+    --        clock.sync(1/4)
+    --        iterate()
+    --    end
+    --end
 
     -- midi_clock:bpm_change( util.round(data[data.pattern].bpm / midi_dividers[util.clamp(data[data.pattern].sync_div, 1, 7)]))
     -- midi_clock.send = false
+end
+
+function sequencer(stage)
+    -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
+    clock.sync(1/8)
+    seqrun(stage) 
+    if stage % m_div(data.metaseq.div) == 0 then 
+        metaseq(stage) 
+    end 
+end
+
+function redraw_callback(stage) 
+    clock.sync(1/30)
+    redraw(stage) 
+    g:redraw() 
+    blink = (blink + 1) % 17 
+end )
+
+function clock.transport.start()
+  -- print("we begin")
+  sequencer_clock = clock.run(sequencer)
+  is_running = 1
+end
+
+function clock.transport.stop()
+  clock.cancel(sequencer_clock)
+  is_running = 0
 end
 
 function enc(n,d)
@@ -1047,7 +1101,7 @@ function redraw(stage)
 
   local tr = data.selected[1]
   local pos = data[data.pattern].track.pos[tr]
-  local params_data = get_params(tr, sequencer_metro.is_running and pos or false, true)
+  local params_data = get_params(tr, is_running and pos or false, true)
   
   
   
@@ -1099,7 +1153,7 @@ function g.key(x, y, z)
       if tr < 8 then
         engine.noteOn(data.selected[1], music.note_num_to_freq(note), 1, data[data.pattern][data.selected[1]].params[tr].sample)
       end
-      if sequencer_metro.is_running and PATTERN_REC then 
+      if is_running and PATTERN_REC then 
         place_note(tr, pos, note )
       end
     end           
@@ -1250,7 +1304,7 @@ function g.redraw()
             local id = to_id(x,y)
             --print(id)
             local level =
-            id == ptn_change_pending  and sequencer_metro.is_running and  util.clamp(blink, 5, 14)
+            id == ptn_change_pending  and is_running and  util.clamp(blink, 5, 14)
             or (data.metaseq.from and data.metaseq.to) and id == data.pattern and  util.clamp(blink, 5, 14)
             or (id >= (data.metaseq.from and data.metaseq.from or data.pattern) and id <= (data.metaseq.to and data.metaseq.to or data.pattern)) and 9 
             or data.pattern == id and 15 
@@ -1263,15 +1317,15 @@ function g.redraw()
       end
     end
     -- playhead
-    if (view.notes_input and  ALT ) or (not view.patterns and not view.notes_input) and sequencer_metro.is_running and not SHIFT then
+    if (view.notes_input and  ALT ) or (not view.patterns and not view.notes_input) and is_running and not SHIFT then
       local yy = view.steps_midi and y + 7 or y 
       local pos = math.ceil(data[data.pattern].track.pos[yy] / 16)
       local level = have_substeps(yy, pos) and 15 or 6
       if not data[data.pattern].track.mute[yy] then g:led(pos, y, level) end
     end
   end
-  
-  g:led(1, 8,  sequencer_metro.is_running and 15 or 6 )
+ 
+  g:led(1, 8,  is_running and 15 or 6 )
   
   g:led(3, 8,  (view.notes_input and PATTERN_REC) and glow or view.notes_input and 6 or 0)
   g:led(5, 8,  (view.notes_input and data.selected[1] < 8 or view.steps_engine) and 15  or  6)
