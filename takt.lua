@@ -523,6 +523,7 @@ local function advance_step(tr, counter)
 end
 
 local function seqrun(counter)
+  print("counter: ", counter)
   for tr = 1, 14 do
 
       local div = data[data.pattern].track.div[tr]
@@ -962,7 +963,7 @@ function sequencer()
         if stage % m_div(data.metaseq.div) == 0 then 
             metaseq() 
         end 
-        stage = (stage + 1) % 15
+        stage = (stage + 1) 
     end
 end
 
