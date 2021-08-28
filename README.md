@@ -9,7 +9,8 @@ Current issues:
 - the tempo seems to be too fast - not sure I have the clock.sync argument correct
 - midi integration is untested
 - midi stop and start messages need to be added
-- link integration is untests
+- link integration appears to work 
+- tempo display doesn't reflect actual clock tempo when clock is not internal
 
 
 ![docs](lib/doc.png)
