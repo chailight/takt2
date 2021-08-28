@@ -206,7 +206,7 @@ local function load_project(pth)
     end
   end
   --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback(1))
+  redraw_clock = clock.run(redraw_callback,1)
 end
 
 local function save_project(txt)
@@ -225,7 +225,7 @@ local function save_project(txt)
     print("save cancel")
   end
   --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback(1))
+  redraw_clock = clock.run(redraw_callback,1)
 end
 
 -- views
@@ -826,7 +826,7 @@ local controls = {
           notes_off_midi()
         else 
           --sequencer_metro:start() 
-          sequencer_clock = clock.run(sequencer(1))
+          sequencer_clock = clock.run(sequencer,1)
           is_running = 1
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
@@ -915,7 +915,7 @@ function init()
     -- change metro to be a clock routine rather than a metro?
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.create(sequencer(1))
+    sequencer_clock = clock.create(sequencer,1)
     is_running = 0
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
@@ -929,7 +929,7 @@ function init()
     --redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
     --redraw_clock = clock.create(redraw_callback(1))
     --redraw_metro:start()
-    redraw_clock = clock.run(redraw_callback(1))
+    redraw_clock = clock.run(redraw_callback,1)
     -- midi_clock = beatclock:new()
     -- midi_clock.on_step = function() end
     -- this pulse function may not be needed - maybe replace the metro events with clock call back functions?
@@ -966,7 +966,7 @@ end
 
 function clock.transport.start()
   -- print("we begin")
-  sequencer_clock = clock.run(sequencer(1))
+  sequencer_clock = clock.run(sequencer,1)
   is_running = 1
 end
 
