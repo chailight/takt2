@@ -530,9 +530,9 @@ local function seqrun(counter)
 
       local div = data[data.pattern].track.div[tr]
       
-      --if (div ~= 6 and counter % dividers[div] == 0) 
-      --or (div == 6 and counter % dividers[div] >= 0.5) then
-      if true then
+      if (div ~= 6 and counter % dividers[div] == 0) 
+      or (div == 6 and counter % dividers[div] >= 0.5) then
+      --if true then
 
         advance_step(tr, counter)
         
@@ -926,10 +926,10 @@ function init()
     -- change metro to be a clock routine rather than a metro?
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.run(sequencer)
+    --sequencer_clock = clock.run(sequencer)
     --clock.cancel(sequencer_clock)
-    print("run")
-    is_running = true 
+    --print("run")
+    --is_running = true 
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
@@ -1144,7 +1144,7 @@ function redraw()
     ui.sampling(sampler, data.ui_index, pos)
   elseif view.patterns then 
     --ui.patterns(data.pattern, data.metaseq, data.ui_index, stage)
-    ui.patterns(data.pattern, data.metaseq, data.ui_index, 1)
+    ui.patterns(data.pattern, data.metaseq, data.ui_index, stage)
   else
     if data.selected[1] < 8 then
       local meta = timber.get_meta(redraw_params[1].sample)
