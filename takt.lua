@@ -530,6 +530,10 @@ local function seqrun(counter)
       if (div ~= 6 and counter % dividers[div] == 0) 
       or (div == 6 and counter % dividers[div] >= 0.5) then
 
+        if params:string("clock_source") ~= "internal" then
+            sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4 
+        end
+
         advance_step(tr, counter)
         
         local mute = data[data.pattern].track.mute[tr]
@@ -626,6 +630,8 @@ local track_params = {
   end,
   [-4] = function(tr, s, d) -- global bpm
       set_bpm(util.clamp(data[data.pattern].bpm + d, 1, 999))
+      --if params:string("clock_source") == "internal" then
+       -- set_bpm(util.clamp(data[data.pattern].bpm + d, 1, 999))
   end,
   [-3] = function(tr, s, d) -- track scale
     
