@@ -23,6 +23,7 @@ local REC_CC = 38
 local sequencer_clock = 0
 local redraw_clock = 0
 local is_running = 0
+local stage = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -949,10 +950,11 @@ function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while true do
         clock.sync(1/8)
-        seqrun() 
-        --if stage % m_div(data.metaseq.div) == 0 then 
-        --    metaseq() 
-        --end 
+        seqrun(stage) 
+        if stage % m_div(data.metaseq.div) == 0 then 
+            metaseq() 
+        end 
+        stage = (stage + 1) % 16
     end
 end
 
