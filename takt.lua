@@ -22,8 +22,8 @@ local REC_CC = 38
 --
 local sequencer_clock = 0
 local redraw_clock = 0
-local is_running = 0
-local stage = 0
+is_running = 0
+stage = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -169,6 +169,7 @@ local function load_project(pth)
   
   --sequencer_metro:stop() 
   clock.cancel(sequencer_clock)
+  print("stop")
   is_running = 0
   -- midi_clock:stop()
   engine.noteOffAll()
@@ -213,6 +214,7 @@ end
 local function save_project(txt)
   --sequencer_metro:stop() 
   clock.cancel(sequencer_clock)
+  print("stop")
   is_running = 0
   -- midi_clock:stop()
   --redraw_metro:stop()
@@ -820,17 +822,17 @@ local controls = {
       if z == 1 then
         if is_running then 
           --sequencer_metro:stop() 
-          clock.cancel(sequencer_clock)
-          is_running = 0
           print("stop")
+          is_running = 0
+          clock.cancel(sequencer_clock)
           -- send a midi stop message if clock is internal?
           -- midi_clock:stop()
           notes_off_midi()
         else 
           --sequencer_metro:start() 
-          sequencer_clock = clock.run(sequencer)
-          is_running = 1
           print("run")
+          is_running = 1
+          sequencer_clock = clock.run(sequencer)
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
           --clock.run(pulse) -- this may not be needed
@@ -920,6 +922,7 @@ function init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
     sequencer_clock = clock.run(sequencer)
     --clock.cancel(sequencer_clock)
+    print("run")
     is_running = 1
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
@@ -951,7 +954,7 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while true do
-        clock.sync(1/16)
+        clock.sync(1/128)
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
             metaseq() 
@@ -972,11 +975,13 @@ end
 function clock.transport.start()
   -- print("we begin")
   sequencer_clock = clock.run(sequencer)
+  print("run")
   is_running = 1
 end
 
 function clock.transport.stop()
   clock.cancel(sequencer_clock)
+  print("stop")
   is_running = 0
 end
 
