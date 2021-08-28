@@ -1,4 +1,4 @@
--- takt v2.3b
+-- takt v2.3c main
 -- @its_your_bedtime
 -- 
 -- parameter locking sequencer
@@ -822,7 +822,7 @@ local controls = {
       if z == 1 then
         if is_running then 
           --sequencer_metro:stop() 
-          print("stop")
+          print("control stop")
           is_running = 0
           clock.cancel(sequencer_clock)
           -- send a midi stop message if clock is internal?
@@ -830,7 +830,7 @@ local controls = {
           notes_off_midi()
         else 
           --sequencer_metro:start() 
-          print("run")
+          print("control: run")
           is_running = 1
           sequencer_clock = clock.run(sequencer)
           -- send a midi start message if clock is internal?
@@ -927,6 +927,8 @@ function init()
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
+        print("internal bpm ", data[data.pattern].bpm)
+
         -- if sequencer is now a clock function no need to set
         --sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
     end
@@ -953,8 +955,9 @@ end
 
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
-    while true do
+    while is_running do
         clock.sync(1/128)
+        print(clock.get_tempo())
         seqrun(stage) 
         if stage % m_div(data.metaseq.div) == 0 then 
             metaseq() 
@@ -975,13 +978,13 @@ end
 function clock.transport.start()
   -- print("we begin")
   sequencer_clock = clock.run(sequencer)
-  print("run")
+  print("transport: run")
   is_running = 1
 end
 
 function clock.transport.stop()
   clock.cancel(sequencer_clock)
-  print("stop")
+  print("transport: stop")
   is_running = 0
 end
 
