@@ -143,7 +143,7 @@ else
     metro_icon(42,1, pos)
     screen.move(66, 6)
     --screen.text_right(data[data.pattern].bpm)
-    screen.text_right(math.floor(clock.get_tempo())
+    screen.text_right(math.floor(clock.get_tempo()))
     
     
   end
