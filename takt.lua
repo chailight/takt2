@@ -946,18 +946,22 @@ end
 
 function sequencer(stage)
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
-    clock.sync(1/8)
-    seqrun(stage) 
-    if stage % m_div(data.metaseq.div) == 0 then 
-        metaseq(stage) 
-    end 
+    while true do
+        clock.sync(1/8)
+        seqrun(stage) 
+        if stage % m_div(data.metaseq.div) == 0 then 
+            metaseq(stage) 
+        end 
+    end
 end
 
 function redraw_callback(stage) 
-    clock.sync(1/30)
-    redraw(stage) 
-    g:redraw() 
-    blink = (blink + 1) % 17 
+    while true do
+        clock.sync(1/30)
+        redraw(stage) 
+        g:redraw() 
+        blink = (blink + 1) % 17 
+    end
 end 
 
 function clock.transport.start()
