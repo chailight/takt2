@@ -525,7 +525,7 @@ local function advance_step(tr, counter)
 end
 
 local function seqrun(counter)
-  print("counter: ", counter)
+  --print("counter: ", counter)
   for tr = 1, 14 do
 
       local div = data[data.pattern].track.div[tr]
@@ -983,15 +983,15 @@ end
 
 function clock.transport.start()
   -- print("we begin")
+  is_running = true 
   sequencer_clock = clock.run(sequencer)
   print("transport: run")
-  is_running = true 
 end
 
 function clock.transport.stop()
+  is_running = false 
   clock.cancel(sequencer_clock)
   print("transport: stop")
-  is_running = false 
 end
 
 function enc(n,d)
