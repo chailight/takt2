@@ -984,6 +984,7 @@ end
 function clock.transport.start()
   -- print("we begin")
   is_running = true 
+  stage = 0
   sequencer_clock = clock.run(sequencer)
   print("transport: run")
 end
