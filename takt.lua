@@ -170,7 +170,7 @@ local function load_project(pth)
   sequencer_metro:stop() 
   --clock.cancel(sequencer_clock)
   print("stop")
-  is_running = 0
+  --is_running = 0
   -- midi_clock:stop()
   engine.noteOffAll()
   redraw_metro:stop()
@@ -215,7 +215,7 @@ local function save_project(txt)
   sequencer_metro:stop() 
   --clock.cancel(sequencer_clock)
   print("stop")
-  is_running = 0
+  --is_running = 0
   -- midi_clock:stop()
   redraw_metro:stop()
   --clock.cancel(redraw_clock)
@@ -602,7 +602,7 @@ local function midi_event(d)
     if not view.sampling then
       engine.noteOff(tr)
       engine.noteOn(tr, music.note_num_to_freq(msg.note), msg.vel / 127, data[data.pattern][tr].params[tostring(tr)].sample)
-      if is_running and PATTERN_REC then
+      if sequencer_metro.is_running and PATTERN_REC then
         place_note(tr, pos, msg.note)
       end
     end
@@ -820,7 +820,7 @@ local trig_params = {
 local controls = {
   [1] = function(z) -- start / stop, 
       if z == 1 then
-        if is_running then 
+        if sequencer_metro.is_running then 
           sequencer_metro:stop() 
           print("stop")
           --is_running = 0
@@ -845,7 +845,7 @@ local controls = {
         comp_shut(sequencer_metro.is_running)
       end
     end,
-  [3] = function(z)  if view.notes_input and z == 1 and is_running then PATTERN_REC = not PATTERN_REC end end,
+  [3] = function(z)  if view.notes_input and z == 1 and sequencer_metro.is_running then PATTERN_REC = not PATTERN_REC end end,
   [5] = function(z)  if z == 1 then if not view.notes_input then set_view('steps_engine') PATTERN_REC = false end tr_change(1)  end end,
   [6] = function(z)  if z == 1 then  if not view.notes_input then set_view('steps_midi') PATTERN_REC = false end tr_change(8)  end end,
   [8] = function(z)  if z == 1 then set_view(view.notes_input and (data.selected[1] < 8 and 'steps_engine' or 'steps_midi') or 'notes_input') end end,
@@ -980,14 +980,14 @@ function clock.transport.start()
   --sequencer_clock = clock.run(sequencer)
   sequencer_metro:start()
   print("run")
-  is_running = 1
+  --is_running = 1
 end
 
 function clock.transport.stop()
   --clock.cancel(sequencer_clock)
   sequencer_metro:stop()
   print("stop")
-  is_running = 0
+  --is_running = 0
 end
 
 function enc(n,d)
@@ -1121,7 +1121,7 @@ function redraw()
 
   local tr = data.selected[1]
   local pos = data[data.pattern].track.pos[tr]
-  local params_data = get_params(tr, is_running and pos or false, true)
+  local params_data = get_params(tr, sequencer_metro.is_running and pos or false, true)
   
   
   
@@ -1174,7 +1174,7 @@ function g.key(x, y, z)
       if tr < 8 then
         engine.noteOn(data.selected[1], music.note_num_to_freq(note), 1, data[data.pattern][data.selected[1]].params[tr].sample)
       end
-      if is_running and PATTERN_REC then 
+      if sequencer_metro.is_running and PATTERN_REC then 
         place_note(tr, pos, note )
       end
     end           
@@ -1325,7 +1325,7 @@ function g.redraw()
             local id = to_id(x,y)
             --print(id)
             local level =
-            id == ptn_change_pending  and is_running and  util.clamp(blink, 5, 14)
+            id == ptn_change_pending  and sequencer_metro.is_running and  util.clamp(blink, 5, 14)
             or (data.metaseq.from and data.metaseq.to) and id == data.pattern and  util.clamp(blink, 5, 14)
             or (id >= (data.metaseq.from and data.metaseq.from or data.pattern) and id <= (data.metaseq.to and data.metaseq.to or data.pattern)) and 9 
             or data.pattern == id and 15 
@@ -1338,7 +1338,7 @@ function g.redraw()
       end
     end
     -- playhead
-    if (view.notes_input and  ALT ) or (not view.patterns and not view.notes_input) and is_running and not SHIFT then
+    if (view.notes_input and  ALT ) or (not view.patterns and not view.notes_input) and sequencer_metro.is_running and not SHIFT then
       local yy = view.steps_midi and y + 7 or y 
       local pos = math.ceil(data[data.pattern].track.pos[yy] / 16)
       local level = have_substeps(yy, pos) and 15 or 6
@@ -1346,7 +1346,7 @@ function g.redraw()
     end
   end
  
-  g:led(1, 8,  is_running and 15 or 6 )
+  g:led(1, 8,  sequencer_metro.is_running and 15 or 6 )
   
   g:led(3, 8,  (view.notes_input and PATTERN_REC) and glow or view.notes_input and 6 or 0)
   g:led(5, 8,  (view.notes_input and data.selected[1] < 8 or view.steps_engine) and 15  or  6)
