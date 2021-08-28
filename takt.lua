@@ -916,7 +916,7 @@ function init()
     -- change metro to be a clock routine rather than a metro?
     --sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.create(sequencer)
+    sequencer_clock = clock.run(sequencer)
     clock.cancel(sequencer_clock)
     is_running = 0
     if params:string("clock_source") == "internal" then
