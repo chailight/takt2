@@ -20,10 +20,10 @@ local textentry = require('textentry')
 local midi_out_devices = {}
 local REC_CC = 38
 --
-local sequencer_clock = 0
-local redraw_clock = 0
-is_running = 0
-stage = 0
+--local sequencer_clock = 0
+--local redraw_clock = 0
+-- is_running = 0
+-- stage = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -167,15 +167,15 @@ end
 
 local function load_project(pth)
   
-  --sequencer_metro:stop() 
-  clock.cancel(sequencer_clock)
+  sequencer_metro:stop() 
+  --clock.cancel(sequencer_clock)
   print("stop")
   is_running = 0
   -- midi_clock:stop()
   engine.noteOffAll()
-  --redraw_metro:stop()
-  clock.cancel(redraw_clock)
-  comp_shut(is_running)
+  redraw_metro:stop()
+  --clock.cancel(redraw_clock)
+  comp_shut(sequencer_metro.is_running)
 
   if string.find(pth, '.tkt') ~= nil then
     local saved = tab.load(pth)
@@ -207,28 +207,28 @@ local function load_project(pth)
         print("no data")
     end
   end
-  --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback)
+  redraw_metro:start()
+  --redraw_clock = clock.run(redraw_callback)
 end
 
 local function save_project(txt)
-  --sequencer_metro:stop() 
-  clock.cancel(sequencer_clock)
+  sequencer_metro:stop() 
+  --clock.cancel(sequencer_clock)
   print("stop")
   is_running = 0
   -- midi_clock:stop()
-  --redraw_metro:stop()
-  clock.cancel(redraw_clock)
+  redraw_metro:stop()
+  --clock.cancel(redraw_clock)
   engine.noteOffAll()
-  comp_shut(is_running)
+  comp_shut(sequencer_metro.is_running)
   if txt then
     tab.save({ txt, data }, norns.state.data .. txt ..".tkt")
     params:write( norns.state.data .. txt .. ".pset")
   else
     print("save cancel")
   end
-  --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback)
+  redraw_metro:start()
+  --redraw_clock = clock.run(redraw_callback)
 end
 
 -- views
@@ -398,7 +398,7 @@ local function set_bpm(n)
         data[data.pattern].bpm = n
         params:set("clock_tempo",n)
         -- no longer need to set sequencer_metro if it runs off the clock?
-        --sequencer_metro.time = 60 / (clock.get_tempo() * 2)  / 16 --[[ppqn]] / 4 
+        sequencer_metro.time = 60 / (clock.get_tempo() * 2)  / 16 --[[ppqn]] / 4 
     end
     -- midi_clock:bpm_change( util.round(data[data.pattern].bpm / midi_dividers[util.clamp(data[data.pattern].sync_div, 1, 7)]))
 end
@@ -821,18 +821,18 @@ local controls = {
   [1] = function(z) -- start / stop, 
       if z == 1 then
         if is_running then 
-          --sequencer_metro:stop() 
+          sequencer_metro:stop() 
           print("stop")
-          is_running = 0
-          clock.cancel(sequencer_clock)
+          --is_running = 0
+          --clock.cancel(sequencer_clock)
           -- send a midi stop message if clock is internal?
           -- midi_clock:stop()
           notes_off_midi()
         else 
-          --sequencer_metro:start() 
+          sequencer_metro:start() 
           print("run")
-          is_running = 1
-          sequencer_clock = clock.run(sequencer)
+          --is_running = 1
+          --sequencer_clock = clock.run(sequencer)
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
           --clock.run(pulse) -- this may not be needed
@@ -842,7 +842,7 @@ local controls = {
           reset_positions()
           kill_all_midi()
         end
-        comp_shut(is_running)
+        comp_shut(sequencer_metro.is_running)
       end
     end,
   [3] = function(z)  if view.notes_input and z == 1 and is_running then PATTERN_REC = not PATTERN_REC end end,
@@ -918,25 +918,28 @@ function init()
     ui.init()
 
     -- change metro to be a clock routine rather than a metro?
-    --sequencer_metro = metro.init()
+    sequencer_metro = metro.init()
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
-    sequencer_clock = clock.run(sequencer)
+    --sequencer_clock = clock.run(sequencer)
     --clock.cancel(sequencer_clock)
-    print("run")
-    is_running = 1
+    --print("run")
+    --is_running = 1
     if params:string("clock_source") == "internal" then
-        -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
+        --sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
+        sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4 
         -- if sequencer is now a clock function no need to set
         --sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4
+    else
+        sequencer_metro.time = 60 / (clock.get_tempo() * 2) / 16 --[[ppqn]] / 4 
     end
 
-    --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
+    sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
 
-    --redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
+    redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
+    redraw_metro:start()
     --redraw_clock = clock.create(redraw_callback(1))
-    --redraw_metro:start()
-    redraw_clock = clock.run(redraw_callback)
+    --redraw_clock = clock.run(redraw_callback)
     -- midi_clock = beatclock:new()
     -- midi_clock.on_step = function() end
     -- this pulse function may not be needed - maybe replace the metro events with clock call back functions?
@@ -974,13 +977,15 @@ end
 
 function clock.transport.start()
   -- print("we begin")
-  sequencer_clock = clock.run(sequencer)
+  --sequencer_clock = clock.run(sequencer)
+  sequencer_metro:start()
   print("run")
   is_running = 1
 end
 
 function clock.transport.stop()
-  clock.cancel(sequencer_clock)
+  --clock.cancel(sequencer_clock)
+  sequencer_metro:stop()
   print("stop")
   is_running = 0
 end
