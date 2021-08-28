@@ -838,7 +838,7 @@ local controls = {
           --print("control: run")
           --is_running = 1
           --sequencer_clock = clock.run(sequencer)
-          clock.transport.run()
+          clock.transport.start()
           -- send a midi start message if clock is internal?
           -- midi_clock:start()
           --clock.run(pulse) -- this may not be needed
@@ -929,7 +929,7 @@ function init()
     sequencer_clock = clock.run(sequencer)
     --clock.cancel(sequencer_clock)
     print("run")
-    is_running = 1
+    is_running = true 
     if params:string("clock_source") == "internal" then
         -- sequencer_metro.time = 60 / (data[data.pattern].bpm * 2) / 16 --[[ppqn]] / 4 
         params:set("clock_tempo", data[data.pattern].bpm)
