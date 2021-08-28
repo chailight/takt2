@@ -1,8 +1,9 @@
--- takt v2.2
+-- takt v2.3
 -- @its_your_bedtime
---
+-- 
 -- parameter locking sequencer
 --
+-- modified to use global clock by @chailight
 
 local sampler = include('lib/sampler')
 local browser = include('lib/browser')
@@ -957,7 +958,7 @@ function redraw_callback(stage)
     redraw(stage) 
     g:redraw() 
     blink = (blink + 1) % 17 
-end )
+end 
 
 function clock.transport.start()
   -- print("we begin")
