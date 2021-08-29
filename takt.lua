@@ -985,7 +985,7 @@ function simple_seq()
   --while true do
   for i=1,32 do
     simple_seqrun(math.floor(clock.get_beats()))
-    clock.sync(1/16)
+    clock.sync(1/32)
   end
 end
 
