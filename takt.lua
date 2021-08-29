@@ -986,6 +986,7 @@ function simple_seq()
     for i=1,256 do
         simple_seqrun(math.floor(clock.get_beats()))
         clock.sync(1/64)
+    end
   end
 end
 
