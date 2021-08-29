@@ -982,7 +982,7 @@ end
 function simple_seq()
   --clock.sync(1)
   while true do
-    for i=1,16 do
+    for i=1,256 do
         simple_seqrun(math.floor(clock.get_beats()))
         clock.sync(1/64)
     end
@@ -1076,7 +1076,8 @@ function clock.transport.start()
   is_running = true 
   stage = 0
   --sequencer_clock = clock.run(sequencer)
-  sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
+  --sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
+  sequencer_clock = clock.run(function() clock.run(simple_seq) end)
   print("transport: run")
 end
 
