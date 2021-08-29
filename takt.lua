@@ -980,10 +980,9 @@ function sequencer()
 end
 
 function simple_seq()
-  clock.sync(1)
-
+  --clock.sync(1)
   while true do
-    for i=1,1024 do
+    for i=1,256 do
         simple_seqrun(math.floor(clock.get_beats()))
         clock.sync(1/64)
     end
