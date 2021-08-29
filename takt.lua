@@ -962,8 +962,8 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
-        clock.sync(1/8) -- stay in sync with link quantum
-        for j=1,16 do -- 
+        clock.sync(1/4) -- stay in sync with link quantum
+        for j=1,32 do -- 
             --clock.sync(1/4)
             --print(clock.get_tempo())
             for i=1,16 do
