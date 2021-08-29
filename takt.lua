@@ -20,8 +20,8 @@ local textentry = require('textentry')
 local midi_out_devices = {}
 local REC_CC = 38
 --
-local sequencer_clock = 0
-local redraw_clock = 0
+--local sequencer_clock = 0
+--local redraw_clock = 0
 is_running = false 
 stage = 0
 local hold_time, down_time, blink = 0, 0, 1
