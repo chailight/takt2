@@ -971,7 +971,7 @@ function sequencer()
                 --if i % m_div(data.metaseq.div) == 0 then 
                 --    metaseq() 
                 --end 
-                clock.sync(1/128) -- allow for 16 subdivisions per step
+                clock.sync(1/96) -- allow for 16 subdivisions per step
                 --stage = (stage + 1) 
              end
         end
