@@ -983,8 +983,9 @@ function simple_seq()
   clock.sync(1)
 
   while true do
-    simple_seqrun(math.floor(clock.get_beats()))
-    clock.sync(1/64)
+    for i=1,256 do
+        simple_seqrun(math.floor(clock.get_beats()))
+        clock.sync(1/64)
   end
 end
 
@@ -992,8 +993,7 @@ local function simple_advance_step(tr, counter)
   local start = data[data.pattern].track.start[tr]
   local len = data[data.pattern].track.len[tr]
   data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
-  --data[data.pattern].track.cycle[tr] = counter % 256 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
-  data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
+  data[data.pattern].track.cycle[tr] = counter % 256 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
 end
 
 function simple_seqrun(counter)
@@ -1001,9 +1001,9 @@ function simple_seqrun(counter)
 
       local div = data[data.pattern].track.div[tr]
       
-      --if (div ~= 6 and counter % dividers[div] == 0) 
-      --or (div == 6 and counter % dividers[div] >= 0.5) then
-      if true then
+      if (div ~= 6 and counter % dividers[div] == 0) 
+      or (div == 6 and counter % dividers[div] >= 0.5) then
+      --if true then
 
         simple_advance_step(tr, counter)
         
@@ -1076,7 +1076,7 @@ function clock.transport.start()
   is_running = true 
   stage = 0
   --sequencer_clock = clock.run(sequencer)
-  sequencer_clock = clock.run(simple_seq)
+  sequencer_clock = clock.run(function() clock.sync(4) clock.run(simple_seq) end)
   print("transport: run")
 end
 
