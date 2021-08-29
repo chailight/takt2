@@ -990,9 +990,9 @@ function simple_seq()
 end
 
 function test_seq()
-  --if params:string("clock_source") ~= "midi" then
-  --  clock.sync(4) -- wait until the "1" of a 4/4 count
-  --end
+  if params:string("clock_source") ~= "midi" then
+    clock.sync(4) -- wait until the "1" of a 4/4 count
+  end
   while true do
     --step = util.wrap(step + 1,1,4)
     --if step == 1 then print(clock.get_beats()) end
