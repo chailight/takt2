@@ -980,7 +980,7 @@ function sequencer()
 end
 
 function simple_seq()
-  clock.sync(4)
+  clock.sync(1)
   while true do
     --for i=1,256 do
         simple_seqrun(math.floor(clock.get_beats()))
