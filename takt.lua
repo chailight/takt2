@@ -990,6 +990,9 @@ end
 
 function clock.transport.start()
   -- print("we begin")
+  if params:string("clock_source") ~= "internal" then
+    reset_positions()
+  end
   is_running = true 
   stage = 0
   sequencer_clock = clock.run(sequencer)
