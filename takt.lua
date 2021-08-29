@@ -987,6 +987,18 @@ function simple_seq()
   end
 end
 
+function test_seq()
+  if params:string("clock_source") ~= "midi" then
+    clock.sync(4) -- wait until the "1" of a 4/4 count
+  end
+  while true do
+    step = util.wrap(step + 1,1,16)
+    if step == 1 then print(clock.get_beats()) end
+    screen_dirty = true
+    clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
+  end
+end
+
 local function simple_advance_step(tr, counter)
   local start = data[data.pattern].track.start[tr]
   local len = data[data.pattern].track.len[tr]
@@ -1075,7 +1087,7 @@ function clock.transport.start()
   stage = 0
   --sequencer_clock = clock.run(sequencer)
   --sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
-  sequencer_clock = clock.run(simple_seq) 
+  sequencer_clock = clock.run(test_seq) 
   print("transport: run")
 end
 
