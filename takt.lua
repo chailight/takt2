@@ -962,7 +962,7 @@ end
 function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
-        --clock.sync(4) -- stay in sync with link quantum
+        clock.sync(4) -- stay in sync with link quantum
         for j=1,64 do
             clock.sync(1/4)
             --print(clock.get_tempo())
@@ -975,7 +975,7 @@ function sequencer()
                 --stage = (stage + 1) 
              end
         end
-        reset_positions()
+        --reset_positions()
     end
 end
 
@@ -997,6 +997,9 @@ function clock.transport.start()
 end
 
 function clock.transport.stop()
+  if not is_running then
+    reset_positions()
+  end
   is_running = false 
   clock.cancel(sequencer_clock)
   print("transport: stop")
