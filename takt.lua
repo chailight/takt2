@@ -964,9 +964,9 @@ function sequencer()
     while is_running do
         clock.sync(1) -- stay in sync with link quantum
         for j=1,16 do -- 
-            clock.sync(1/8)
+            --clock.sync(1/4)
             --print(clock.get_tempo())
-            for i=1,64 do
+            for i=1,16 do
                 seqrun(i) 
                 --if i % m_div(data.metaseq.div) == 0 then 
                 --    metaseq() 
