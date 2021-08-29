@@ -987,7 +987,7 @@ function simple_seq()
         simple_seqrun(math.floor(clock.get_beats()))
         clock.sync(1/64)
       end
-      clock.sync(1/64)
+      clock.sync(1/128)
   end
 end
 
