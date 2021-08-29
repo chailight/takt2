@@ -974,8 +974,8 @@ function sequencer()
                 clock.sync(1/4) -- allow for 16 subdivisions per step
                 --stage = (stage + 1) 
              end
-             reset_positions()
         end
+        reset_positions()
     end
 end
 
