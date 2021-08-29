@@ -993,9 +993,10 @@ function test_seq()
     clock.sync(4) -- wait until the "1" of a 4/4 count
   end
   while true do
-    step = util.wrap(step + 1,1,16)
+    step = util.wrap(step + 1,1,1)
     if step == 1 then print(clock.get_beats()) end
     screen_dirty = true
+    clock.run(simple_seq)
     clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
   end
 end
