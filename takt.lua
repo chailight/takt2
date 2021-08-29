@@ -979,6 +979,78 @@ function sequencer()
     end
 end
 
+function simple_seq()
+  clock.sync(1)
+
+  while true do
+    simple_seqrun(math.floor(clock.get_beats()))
+    clock.sync(1/4)
+  end
+end
+
+function simple_seqrun(counter)
+  for tr = 1, 1 do
+
+      local div = data[data.pattern].track.div[tr]
+      
+      --if (div ~= 6 and counter % dividers[div] == 0) 
+      --or (div == 6 and counter % dividers[div] >= 0.5) then
+      if true then
+
+        advance_step(tr, counter)
+        
+        local mute = data[data.pattern].track.mute[tr]
+        local pos = data[data.pattern].track.pos[tr]
+        local trig = data[data.pattern][tr][pos]
+        
+        if tr > 7 and choke[tr][6] then
+          if pos > choke[tr][5] + choke[tr][6] then
+            midi_out_devices[choke[tr][1]]:note_off(choke[tr][2], choke[tr][3], choke[tr][4])
+          end
+        end
+        
+        if trig == 1 and not mute then
+          
+          set_locks(data[data.pattern][tr].params[tostring(tr)])
+          
+          local step_param = get_params(tr, pos, true)
+          
+          data[data.pattern].track.div[tr] = step_param.div ~= data[data.pattern].track.div[tr] and step_param.div or data[data.pattern].track.div[tr]
+
+          if rules[step_param.rule][2](tr, pos) then 
+            
+            step_param = step_param.lock ~= 1 and get_params(tr) or step_param
+            
+            if tr == data.selected[1] then 
+              redraw_params[1] = step_param
+              redraw_params[2] = step_param
+            end
+            
+            if tr < 8 then
+              
+              set_locks(step_param)
+              choke_group(tr, step_param.sample)
+              engine.noteOn(tr, music.note_num_to_freq(step_param.note), 1, step_param.sample)
+              choke[tr] = step_param.sample
+              
+            else
+              
+              set_cc(step_param)
+              
+              if step_param.program_change >= 0 then
+                midi_out_devices[step_param.device]:program_change(step_param.program_change, step_param.channel)
+              end
+
+              midi_out_devices[step_param.device]:note_on( step_param.note, step_param.velocity, step_param.channel )
+              choke[tr] = { step_param.device, step_param.note, step_param.velocity, step_param.channel, pos, step_param.length} 
+            end
+          end
+       end
+    end
+  end
+  
+end
+
 function redraw_callback() 
     while true do
         clock.sync(1/30)
@@ -995,7 +1067,8 @@ function clock.transport.start()
   end
   is_running = true 
   stage = 0
-  sequencer_clock = clock.run(sequencer)
+  --sequencer_clock = clock.run(sequencer)
+  sequencer_clock = clock.run(simple_seq)
   print("transport: run")
 end
 
