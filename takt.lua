@@ -983,10 +983,10 @@ end
 function simple_seq()
   --clock.sync(1)
   while true do
-      for i=1,1 do
+      for i=1,16 do
         simple_seqrun(math.floor(clock.get_beats()))
-        clock.sync(1/4)
       end
+      clock.sync(1/4)
   end
 end
 
