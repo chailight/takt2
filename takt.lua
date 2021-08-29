@@ -983,9 +983,9 @@ end
 function simple_seq()
   --clock.sync(1)
   --while true do
-  for i=1,1 do
+  for i=1,16 do
     simple_seqrun(math.floor(clock.get_beats()))
-    clock.sync(1/64)
+    --clock.sync(1/64)
   end
 end
 
@@ -998,7 +998,7 @@ function test_seq()
     --if step == 1 then print(clock.get_beats()) end
     --screen_dirty = true
     clock.run(simple_seq)
-    --clock.sync(1/64) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
+    clock.sync(1/64) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
   end
 end
 
