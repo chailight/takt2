@@ -966,7 +966,7 @@ function sequencer()
         for j=0,64 do
             clock.sync(1/4)
             --print(clock.get_tempo())
-            for i=1,16 do
+            for i=0,16 do
                 seqrun(i) 
                 --if i % m_div(data.metaseq.div) == 0 then 
                 --    metaseq() 
@@ -997,9 +997,6 @@ function clock.transport.start()
 end
 
 function clock.transport.stop()
-  if not is_running then
-    reset_positions()
-  end
   is_running = false 
   clock.cancel(sequencer_clock)
   print("transport: stop")
