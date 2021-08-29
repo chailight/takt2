@@ -963,7 +963,7 @@ function sequencer()
     -- run the sequencer at 1/8 of a beat (ie. 1/32nd notes ) resolution 
     while is_running do
         clock.sync(1) -- stay in sync with link quantum
-        for j=1,64 do -- 
+        for j=1,16 do -- 
             --clock.sync(1/4)
             --print(clock.get_tempo())
             for i=1,16 do
@@ -971,7 +971,7 @@ function sequencer()
                 --if i % m_div(data.metaseq.div) == 0 then 
                 --    metaseq() 
                 --end 
-                clock.sync(1/96) -- allow for 16 subdivisions per step
+                clock.sync(1/64) -- allow for 16 subdivisions per step
                 --stage = (stage + 1) 
              end
         end
