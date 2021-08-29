@@ -966,7 +966,6 @@ function sequencer()
         --print(clock.get_tempo())
         for i=1,16 do
             seqrun(i) 
-            clock.sync(1/4)
             if i % m_div(data.metaseq.div) == 0 then 
                 metaseq() 
             end 
