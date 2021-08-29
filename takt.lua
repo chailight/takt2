@@ -983,7 +983,7 @@ end
 function simple_seq()
   --clock.sync(1)
   --while true do
-  for i=1,16 do
+  for i=1,4 do
     simple_seqrun(math.floor(clock.get_beats()))
     clock.sync(1/64)
   end
@@ -994,7 +994,7 @@ function test_seq()
     clock.sync(4) -- wait until the "1" of a 4/4 count
   end
   while true do
-    step = util.wrap(step + 1,1,1)
+    step = util.wrap(step + 1,1,16)
     if step == 1 then print(clock.get_beats()) end
     screen_dirty = true
     clock.run(simple_seq)
