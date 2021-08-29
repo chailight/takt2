@@ -584,7 +584,6 @@ local function seqrun(counter)
           end
        end
     end
-    clock.sync(1/64)
   end
   
 end
@@ -965,11 +964,15 @@ function sequencer()
     while is_running do
         clock.sync(4)
         --print(clock.get_tempo())
-        seqrun(stage) 
-        if stage % m_div(data.metaseq.div) == 0 then 
-            metaseq() 
-        end 
-        stage = (stage + 1) 
+        for i=1,16 do
+            seqrun(i) 
+            clock.sync(1/4)
+            if i % m_div(data.metaseq.div) == 0 then 
+                metaseq() 
+            end 
+            clock.sync(1/4)
+            --stage = (stage + 1) 
+         end
     end
 end
 
