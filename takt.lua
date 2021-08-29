@@ -975,7 +975,7 @@ function sequencer()
                 --stage = (stage + 1) 
              end
         end
-        reset_positions()
+        --reset_positions()
     end
 end
 
