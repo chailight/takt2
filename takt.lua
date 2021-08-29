@@ -964,7 +964,7 @@ function sequencer()
     while is_running do
         clock.sync(4) -- stay in sync with link quantum
         for j=1,16 do -- 
-            clock.sync(1/64)
+            clock.sync(1/4)
             --print(clock.get_tempo())
             for i=1,16 do
                 seqrun(i) 
@@ -975,7 +975,7 @@ function sequencer()
                 --stage = (stage + 1) 
              end
         end
-        reset_positions()
+        --reset_positions()
     end
 end
 
