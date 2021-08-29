@@ -991,7 +991,7 @@ end
 
 function test_seq()
   if params:string("clock_source") ~= "midi" then
-    clock.sync(4) -- wait until the "1" of a 4/4 count
+    clock.sync(1) -- wait until the "1" of a 4/4 count
   end
   while true do
     --step = util.wrap(step + 1,1,4)
