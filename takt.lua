@@ -998,7 +998,7 @@ function test_seq()
     --step = util.wrap(step + 1,1,4)
     --if step == 1 then print(clock.get_beats()) end
     --screen_dirty = true
-    clock.run(simple_seq)
+    sub_seq = clock.run(simple_seq)
     --simple_seq()
     --clock.sync(1/64) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
   --end
@@ -1099,6 +1099,7 @@ end
 function clock.transport.stop()
   is_running = false 
   clock.cancel(sequencer_clock)
+  clock.cancel(sub_seq)
   print("transport: stop")
 end
 
