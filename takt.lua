@@ -964,12 +964,12 @@ function sequencer()
     while is_running do
         clock.sync(4)
         --print(clock.get_tempo())
-        for i=1,256 do
+        for i=1,128 do
             seqrun(i) 
             if i % m_div(data.metaseq.div) == 0 then 
                 metaseq() 
             end 
-            clock.sync(1/32) -- allow for 16 subdivisions per step
+            clock.sync(1/16) -- allow for 16 subdivisions per step
             --stage = (stage + 1) 
          end
     end
