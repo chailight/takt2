@@ -1076,7 +1076,7 @@ function clock.transport.start()
   is_running = true 
   stage = 0
   --sequencer_clock = clock.run(sequencer)
-  sequencer_clock = clock.run(function() clock.sync(4) clock.run(simple_seq) end)
+  sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
   print("transport: run")
 end
 
