@@ -584,7 +584,7 @@ local function seqrun(counter)
           end
        end
     end
-    clock.sync(1/4)
+    clock.sync(1/64)
   end
   
 end
