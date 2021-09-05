@@ -55,7 +55,8 @@ function utils.make_default_pattern()
         default.track.mute[i] = false
         default.track.pos[i] = 0
         default.track.start[i] = 1
-        default.track.len[i] = 256
+        --default.track.len[i] = 256
+        default.track.len[i] = 16 
         default.track.div[i] = 5
         default.track.cycle[i] = 1
     end
@@ -71,7 +72,8 @@ function utils.make_default_pattern()
         default[l].params[tostring(l)] = default_engine_params(l)
         default[m].params[tostring(m)] = default_midi_params(m)
   
-        for i=0,256 do
+        --for i=0,256 do
+        for i=0,16 do
             default[l][i] = 0
             default[m][i] = 0
             default[l].params[i] = {}

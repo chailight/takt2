@@ -981,7 +981,7 @@ function sequencer()
 end
 
 function simple_seq()
-  --clock.sync(1)
+  clock.sync(1)
   while true do
       for i=1,16 do
         simple_seqrun(math.floor(clock.get_beats()))
@@ -995,14 +995,12 @@ function test_seq()
   if params:string("clock_source") ~= "midi" then
     clock.sync(4) -- wait until the "1" of a 4/4 count
   end
-  --while true do
-    --step = util.wrap(step + 1,1,4)
-    --if step == 1 then print(clock.get_beats()) end
-    --screen_dirty = true
-    sub_seq = clock.run(simple_seq)
-    --simple_seq()
-    --clock.sync(1/64) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
-  --end
+  while true do
+    for i=1,8 do:
+        clock.run(step,i,math.floor(clock.get_beats()))
+    end
+    clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
+  end
 end
 
 local function simple_advance_step(tr, counter)
@@ -1012,10 +1010,26 @@ local function simple_advance_step(tr, counter)
   data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
 end
 
+local function step(tr, counter)
+    local start = data[data.pattern].track.start[tr]
+    local len = data[data.pattern].track.len[tr]
+    data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
+    data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  
+    local mute = data[data.pattern].track.mute[tr]
+    local pos = data[data.pattern].track.pos[tr]
+    local trig = data[data.pattern][tr][pos]
+
+    if tr < 8 then
+      set_locks(step_param)
+      choke_group(tr, step_param.sample)
+      engine.noteOn(tr, music.note_num_to_freq(step_param.note), 1, step_param.sample)
+      choke[tr] = step_param.sample
+end
+
 function simple_seqrun(counter)
   for tr = 1, 2 do
 
-      local div = data[data.pattern].track.div[tr]
+      --local div = data[data.pattern].track.div[tr]
       
       --if (div ~= 6 and counter % dividers[div] == 0) 
       --or (div == 6 and counter % dividers[div] >= 0.5) then
