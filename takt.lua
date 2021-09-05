@@ -995,7 +995,7 @@ function test_seq()
     if params:string("clock_source") ~= "midi" then
         clock.sync(4) -- wait until the "1" of a 4/4 count
     end
-    iwhile true do
+    while true do
         --for i=1,8 do
         --    clock.run(step,i,math.floor(clock.get_beats()))
         --end
