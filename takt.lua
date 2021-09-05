@@ -992,22 +992,22 @@ function simple_seq()
 end
 
 function test_seq()
-  if params:string("clock_source") ~= "midi" then
-    clock.sync(4) -- wait until the "1" of a 4/4 count
-  end
-  while true do
-    for i=1,8 do
-        clock.run(step,i,math.floor(clock.get_beats()))
+    if params:string("clock_source") ~= "midi" then
+        clock.sync(4) -- wait until the "1" of a 4/4 count
     end
-    clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
-  end
+    while true do
+        for i=1,8 do
+            clock.run(step,i,math.floor(clock.get_beats()))
+        end
+        clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
+    end
 end
 
 local function simple_advance_step(tr, counter)
-  local start = data[data.pattern].track.start[tr]
-  local len = data[data.pattern].track.len[tr]
-  data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
-  data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
+    local start = data[data.pattern].track.start[tr]
+    local len = data[data.pattern].track.len[tr]
+    data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
+    data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
 end
 
 local function step(tr, counter)
