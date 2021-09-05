@@ -997,7 +997,7 @@ function test_seq()
     end
     while true do
         for i=1,8 do
-            clock.run(step(i,math.floor(clock.get_beats())))
+            clock.run(my_step(i,math.floor(clock.get_beats())))
         end
         clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
     end
@@ -1010,7 +1010,7 @@ local function simple_advance_step(tr, counter)
     data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
 end
 
-local function step(tr, counter)
+local function my_step(tr, counter)
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
