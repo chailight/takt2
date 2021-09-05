@@ -997,7 +997,7 @@ function test_seq()
     end
     while true do
         for i=1,8 do
-            clock.run(step,i,math.floor(clock.get_beats()))
+            clock.run(step(i,math.floor(clock.get_beats())))
         end
         clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
     end
