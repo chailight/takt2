@@ -981,14 +981,16 @@ function sequencer()
 end
 
 function simple_seq()
-  clock.sync(1)
-  while true do
-      for i=1,16 do
-        simple_seqrun(math.floor(clock.get_beats()))
-        clock.sync(1/64)
-      end
-      clock.sync(1/256)
-  end
+    if params:string("clock_source") ~= "midi" then
+        clock.sync(4) -- wait until the "1" of a 4/4 count
+    end
+    while true do
+        for i=1,16 do
+          simple_seqrun(math.floor(clock.get_beats()))
+          clock.sync(1/64)
+        end
+        clock.sync(1/4)
+    end
 end
 
 function test_seq()
@@ -1049,7 +1051,7 @@ function my_step(tr)
 end
 
 function simple_seqrun(counter)
-  for tr = 1, 2 do
+  for tr = 1, 8 do
 
       --local div = data[data.pattern].track.div[tr]
       
@@ -1129,7 +1131,7 @@ function clock.transport.start()
   stage = 0
   --sequencer_clock = clock.run(sequencer)
   --sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
-  sequencer_clock = clock.run(test_seq) 
+  sequencer_clock = clock.run(simple_seq) 
   print("transport: run")
 end
 
