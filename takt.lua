@@ -996,9 +996,9 @@ function test_seq()
         clock.sync(4) -- wait until the "1" of a 4/4 count
     end
     while true do
-        --for i=1,8 do
-        --    clock.run(step,i,math.floor(clock.get_beats()))
-        --end
+        for i=1,8 do
+            clock.run(step,i,math.floor(clock.get_beats()))
+        end
         clock.sync(1/4) -- in 4/4, 1 beat is a quarter note, so sixteenths = 1/4 of a beat
     end
 end
@@ -1024,6 +1024,7 @@ local function step(tr, counter)
       choke_group(tr, step_param.sample)
       engine.noteOn(tr, music.note_num_to_freq(step_param.note), 1, step_param.sample)
       choke[tr] = step_param.sample
+    end
 end
 
 function simple_seqrun(counter)
