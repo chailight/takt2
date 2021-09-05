@@ -1011,19 +1011,40 @@ function simple_advance_step(tr, counter)
 end
 
 function my_step(tr, counter)
+
+    -- advanec step
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
     data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  
+
     local mute = data[data.pattern].track.mute[tr]
     local pos = data[data.pattern].track.pos[tr]
     local trig = data[data.pattern][tr][pos]
 
-    if tr < 8 then
-      set_locks(step_param)
-      choke_group(tr, step_param.sample)
-      engine.noteOn(tr, music.note_num_to_freq(step_param.note), 1, step_param.sample)
-      choke[tr] = step_param.sample
+    -- seqrun
+    if trig == 1 and not mute then
+        set_locks(data[data.pattern][tr].params[tostring(tr)])
+      
+        local step_param = get_params(tr, pos, true)
+      
+        data[data.pattern].track.div[tr] = step_param.div ~= data[data.pattern].track.div[tr] and step_param.div or data[data.pattern].track.div[tr]
+
+        if rules[step_param.rule][2](tr, pos) then 
+            step_param = step_param.lock ~= 1 and get_params(tr) or step_param
+            
+            if tr == data.selected[1] then 
+                redraw_params[1] = step_param
+                redraw_params[2] = step_param
+            end
+                
+            if tr < 8 then
+                set_locks(step_param)
+                choke_group(tr, step_param.sample)
+                engine.noteOn(tr, music.note_num_to_freq(step_param.note), 1, step_param.sample)
+                choke[tr] = step_param.sample
+            end
+        end
     end
 end
 
