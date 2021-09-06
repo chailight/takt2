@@ -175,8 +175,8 @@ local function load_project(pth)
   clock.transport.stop()
   -- midi_clock:stop()
   engine.noteOffAll()
-  --redraw_metro:stop()
-  clock.cancel(redraw_clock)
+  redraw_metro:stop()
+  --clock.cancel(redraw_clock)
   comp_shut(is_running)
 
   if string.find(pth, '.tkt') ~= nil then
@@ -209,8 +209,8 @@ local function load_project(pth)
         print("no data")
     end
   end
-  --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback)
+  redraw_metro:start()
+  --redraw_clock = clock.run(redraw_callback)
 end
 
 local function save_project(txt)
@@ -220,8 +220,8 @@ local function save_project(txt)
   --is_running = 0
   clock.transport.stop()
   -- midi_clock:stop()
-  --redraw_metro:stop()
-  clock.cancel(redraw_clock)
+  redraw_metro:stop()
+  --clock.cancel(redraw_clock)
   engine.noteOffAll()
   comp_shut(is_running)
   if txt then
@@ -230,8 +230,8 @@ local function save_project(txt)
   else
     print("save cancel")
   end
-  --redraw_metro:start()
-  redraw_clock = clock.run(redraw_callback)
+  redraw_metro:start()
+  --redraw_clock = clock.run(redraw_callback)
 end
 
 -- views
@@ -942,10 +942,10 @@ function init()
 
     --sequencer_metro.event = function(stage) seqrun(stage) if stage % m_div(data.metaseq.div) == 0 then metaseq(stage) end end
 
-    --redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
+    redraw_metro = metro.init(function(stage) redraw(stage) g:redraw() blink = (blink + 1) % 17 end, 1/30)
     --redraw_clock = clock.create(redraw_callback(1))
-    --redraw_metro:start()
-    redraw_clock = clock.run(redraw_callback)
+    redraw_metro:start()
+    --redraw_clock = clock.run(redraw_callback)
     -- midi_clock = beatclock:new()
     -- midi_clock.on_step = function() end
     -- this pulse function may not be needed - maybe replace the metro events with clock call back functions?
