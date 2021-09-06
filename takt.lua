@@ -400,6 +400,8 @@ local function set_bpm(n)
     if params:string("clock_source") == "internal" then
         data[data.pattern].bpm = n
         params:set("clock_tempo",n)
+    else
+        data[data.pattern].bpm = math.floor(clock.get_tempo()) 
         -- no longer need to set sequencer_metro if it runs off the clock?
         --sequencer_metro.time = 60 / (clock.get_tempo() * 2)  / 16 --[[ppqn]] / 4 
     end
