@@ -23,7 +23,7 @@ local REC_CC = 38
 --local sequencer_clock = 0
 --local redraw_clock = 0
 is_running = false 
-stage = 0
+--stage = 0
 step = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
@@ -1115,10 +1115,11 @@ end
 
 function redraw_callback() 
     while true do
-        clock.sync(1/30)
-        redraw() 
+        --clock.sync(1/30)
+        redraw(math.floor(clock.get_beats()))
         g:redraw() 
         blink = (blink + 1) % 17 
+        clock.sync(1/32)
     end
 end 
 
@@ -1128,7 +1129,7 @@ function clock.transport.start()
     reset_positions()
   end
   is_running = true 
-  stage = 0
+  --stage = 0
   --sequencer_clock = clock.run(sequencer)
   --sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
   sequencer_clock = clock.run(simple_seq) 
@@ -1269,7 +1270,7 @@ function key(n,z)
   end
 end
 
-function redraw()
+function redraw(stage)
 
   local tr = data.selected[1]
   local pos = data[data.pattern].track.pos[tr]
