@@ -1116,7 +1116,7 @@ end
 function redraw_callback() 
     while true do
         --clock.sync(1/30)
-        redraw(math.floor(clock.get_beats()))
+        redraw(math.floor(clock.get_beats())%16)
         g:redraw() 
         blink = (blink + 1) % 17 
         clock.sync(1/32)
