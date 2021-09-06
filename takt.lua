@@ -987,11 +987,11 @@ function simple_seq()
         clock.sync(4) -- wait until the "1" of a 4/4 count
     end
     while true do
-        for i=1,16 do
+        for i=1,32 do
           simple_seqrun(math.floor(clock.get_beats()))
           clock.sync(1/64)
         end
-        clock.sync(1/4)
+        --clock.sync(1/4)
     end
 end
 
