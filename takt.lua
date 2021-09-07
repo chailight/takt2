@@ -538,7 +538,8 @@ local function seqrun(counter)
       or (div == 6 and counter % dividers[div] >= 0.5) then
       --if true then
 
-        advance_step(tr, counter)
+        --advance_step(tr, counter)
+        simple_advance_step(tr, counter)
         
         local mute = data[data.pattern].track.mute[tr]
         local pos = data[data.pattern].track.pos[tr]
