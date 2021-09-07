@@ -521,6 +521,7 @@ local function metaseq()
 end
 
 local function advance_step(tr, counter)
+  print("counter: ", counter)
   local start = data[data.pattern].track.start[tr]
   local len = data[data.pattern].track.len[tr]
   data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
@@ -988,8 +989,8 @@ function simple_seq()
     end
     while true do
         for i=1,32 do
-          simple_seqrun(math.floor(clock.get_beats()))
           clock.sync(1/64)
+          simple_seqrun(math.floor(clock.get_beats()/(1/64)))
         end
         --clock.sync(1/4)
     end
