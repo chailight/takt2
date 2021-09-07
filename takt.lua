@@ -994,7 +994,7 @@ function clocked_seq()
           --seqrun(math.floor(clock.get_beats()/(1/64)))
           simple_seqrun(math.floor(clock.get_beats()))
         end
-        clock.sync(1/32)
+        clock.sync(1/64)
     end
 end
 
