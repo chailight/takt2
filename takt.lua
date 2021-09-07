@@ -534,9 +534,9 @@ local function seqrun(counter)
 
       local div = data[data.pattern].track.div[tr]
       
-      --if (div ~= 6 and counter % dividers[div] == 0) 
-      --or (div == 6 and counter % dividers[div] >= 0.5) then
-      if true then
+      if (div ~= 6 and counter % dividers[div] == 0) 
+      or (div == 6 and counter % dividers[div] >= 0.5) then
+      --if true then
 
         advance_step(tr, counter)
         
@@ -988,11 +988,11 @@ function simple_seq()
         clock.sync(4) -- wait until the "1" of a 4/4 count
     end
     while true do
-        for i=1,32 do
+        for i=0,256 do
           clock.sync(1/64)
           simple_seqrun(math.floor(clock.get_beats()/(1/64)))
         end
-        --clock.sync(1/4)
+        clock.sync(1/32)
     end
 end
 
@@ -1009,7 +1009,7 @@ function test_seq()
 end
 
 function simple_advance_step(tr, counter)
-    print("counter: ", counter)
+    --print("counter: ", counter)
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
