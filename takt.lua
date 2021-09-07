@@ -521,7 +521,7 @@ local function metaseq()
 end
 
 local function advance_step(tr, counter)
-  print("counter: ", counter)
+  --print("counter: ", counter)
   local start = data[data.pattern].track.start[tr]
   local len = data[data.pattern].track.len[tr]
   data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
@@ -1009,6 +1009,7 @@ function test_seq()
 end
 
 function simple_advance_step(tr, counter)
+    print("counter: ", counter)
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
@@ -1142,7 +1143,7 @@ end
 function clock.transport.stop()
   is_running = false 
   clock.cancel(sequencer_clock)
-  clock.cancel(sub_seq)
+  --clock.cancel(sub_seq)
   print("transport: stop")
 end
 
