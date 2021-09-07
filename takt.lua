@@ -992,7 +992,7 @@ function clocked_seq()
         for i=0,256 do
           clock.sync(1/64)
           --seqrun(math.floor(clock.get_beats()/(1/64)))
-          simple_seqrun(math.floor(clock.get_beats()/(1/64)))
+          simple_seqrun(math.floor(clock.get_beats()))
         end
         clock.sync(1/32)
     end
@@ -1010,9 +1010,9 @@ function simple_seqrun(counter)
   for tr = 1, 1 do
 
       local div = data[data.pattern].track.div[tr]
-      print("div: ", div)
-      print("counter: ", counter)
-      print("dividers: ", dividers[div])
+      --print("div: ", div)
+      --print("counter: ", counter)
+      --print("dividers: ", dividers[div])
       
       if (div ~= 6 and counter % dividers[div] == 0) 
       or (div == 6 and counter % dividers[div] >= 0.5) then
