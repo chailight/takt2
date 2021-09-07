@@ -991,8 +991,8 @@ function clocked_seq()
     while true do
         for i=0,256 do
           clock.sync(1/64)
-          seqrun(math.floor(clock.get_beats()/(1/64)))
-          --simple_seqrun(math.floor(clock.get_beats()/(1/64)))
+          --seqrun(math.floor(clock.get_beats()/(1/64)))
+          simple_seqrun(math.floor(clock.get_beats()/(1/64)))
         end
         clock.sync(1/32)
     end
@@ -1007,13 +1007,16 @@ function simple_advance_step(tr, counter)
 end
 
 function simple_seqrun(counter)
-  for tr = 1, 8 do
+  for tr = 1, 1 do
 
-      --local div = data[data.pattern].track.div[tr]
+      local div = data[data.pattern].track.div[tr]
+      print("div: ", div)
+      print("counter: ", counter)
+      print("dividers: ", dividers[div])
       
-      --if (div ~= 6 and counter % dividers[div] == 0) 
-      --or (div == 6 and counter % dividers[div] >= 0.5) then
-      if true then
+      if (div ~= 6 and counter % dividers[div] == 0) 
+      or (div == 6 and counter % dividers[div] >= 0.5) then
+      --if true then
 
         simple_advance_step(tr, counter)
         
