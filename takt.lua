@@ -1003,7 +1003,7 @@ function simple_advance_step(tr, counter)
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
-    data[data.pattern].track.cycle[tr] = counter % 16 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
+    data[data.pattern].track.cycle[tr] = counter % 256 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
 end
 
 function simple_seqrun(counter)
