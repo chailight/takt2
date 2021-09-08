@@ -990,7 +990,7 @@ function clocked_seq()
     end
     while true do
         for i=0,256 do
-          clock.sync(1/64)
+          clock.sync(1/128)
           --seqrun(math.floor(clock.get_beats()/(1/64)))
           simple_seqrun(math.floor(clock.get_beats()))
         end
