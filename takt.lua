@@ -994,7 +994,7 @@ function clocked_seq()
           --seqrun(math.floor(clock.get_beats()/(1/64)))
           simple_seqrun(math.floor(clock.get_beats()))
         end
-        clock.sync(1/64)
+        --clock.sync(1/64)
     end
 end
 
@@ -1096,10 +1096,14 @@ function clock.transport.start()
 end
 
 function clock.transport.stop()
-  is_running = false 
-  clock.cancel(sequencer_clock)
-  --clock.cancel(sub_seq)
-  print("transport: stop")
+    if is_running then
+        is_running = false 
+        clock.cancel(sequencer_clock)
+        --clock.cancel(sub_seq)
+        print("transport: stop")
+    else 
+        print("transport: already stopped")
+    end
 end
 
 function enc(n,d)
