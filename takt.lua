@@ -1007,7 +1007,7 @@ function simple_advance_step(tr, counter)
 end
 
 function simple_seqrun(counter)
-  for tr = 1, 1 do
+  for tr = 1, 14 do
 
       local div = data[data.pattern].track.div[tr]
       --print("div: ", div)
