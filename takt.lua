@@ -23,7 +23,7 @@ local REC_CC = 38
 --local sequencer_clock = 0
 --local redraw_clock = 0
 is_running = false 
---stage = 0
+seq_stage = 0
 step = 0
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
@@ -989,21 +989,29 @@ function clocked_seq()
         clock.sync(4) -- wait until the "1" of a 4/4 count
     end
     while true do
-        for i=0,256 do
+        for i=1,256 do
           clock.sync(1/128)
           --seqrun(math.floor(clock.get_beats()/(1/64)))
-          simple_seqrun(math.floor(clock.get_beats()))
+          --simple_seqrun(math.floor(clock.get_beats()%256))
+          --simple_seqrun(math.floor(seq_stage))
+	  --seq_stage = seq_stage + 1
+          simple_seqrun(math.floor(i))
         end
-        --clock.sync(1/64)
+        clock.sync(1/128)
     end
 end
 
 function simple_advance_step(tr, counter)
-    --print("counter: ", counter)
     local start = data[data.pattern].track.start[tr]
     local len = data[data.pattern].track.len[tr]
     data[data.pattern].track.pos[tr] = util.clamp((data[data.pattern].track.pos[tr] + 1) % (len ), start, len) -- voice pos
     data[data.pattern].track.cycle[tr] = counter % 256 == 0 and data[data.pattern].track.cycle[tr] + 1 or data[data.pattern].track.cycle[tr]  --data[data.pattern].track.cycle[tr]
+    --if tr == 1 then
+	--print("counter: ", counter)
+	--print("start: ", start)
+	--print("len: ", len)
+	--print("pos: ", data[data.pattern].track.pos[tr])
+    --end
 end
 
 function simple_seqrun(counter)
@@ -1067,6 +1075,8 @@ function simple_seqrun(counter)
             end
           end
        end
+    --else
+	--print("waiting:", counter)
     end
   end
   
@@ -1088,7 +1098,7 @@ function clock.transport.start()
     reset_positions()
   end
   is_running = true 
-  --stage = 0
+  seq_stage = 0
   --sequencer_clock = clock.run(sequencer)
   --sequencer_clock = clock.run(function() clock.sync(1) clock.run(simple_seq) end)
   sequencer_clock = clock.run(clocked_seq) 
