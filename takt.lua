@@ -25,6 +25,7 @@ local REC_CC = 38
 is_running = false 
 seq_stage = 0
 step = 0
+pattern_name = nil
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -183,6 +184,7 @@ local function load_project(pth)
     local saved = tab.load(pth)
     if saved ~= nil then
       print("data found")
+      pattern_name = saved
       for k,v in pairs(saved[2]) do 
         data[k] = v
       end
@@ -224,6 +226,9 @@ local function save_project(txt)
   --clock.cancel(redraw_clock)
   engine.noteOffAll()
   comp_shut(is_running)
+  if pattern_name ~= nil then
+    print("pattern_name ", pattern_name[1])
+  end
   if txt then
     tab.save({ txt, data }, norns.state.data .. txt ..".tkt")
     params:write( norns.state.data .. txt .. ".pset")
@@ -996,6 +1001,9 @@ function clocked_seq()
           --simple_seqrun(math.floor(seq_stage))
 	  --seq_stage = seq_stage + 1
           simple_seqrun(math.floor(i))
+          if i % m_div(data.metaseq.div) == 0 then 
+              metaseq() 
+          end 
         end
         clock.sync(1/128)
     end
