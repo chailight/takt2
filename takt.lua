@@ -25,7 +25,7 @@ local REC_CC = 38
 is_running = false 
 seq_stage = 0
 step = 0
-pattern_name = nil
+pattern_name = 'new' 
 local hold_time, down_time, blink = 0, 0, 1
 local ALT, SHIFT, MOD, PATTERN_REC, K1_hold, K3_hold, ptn_copy, ptn_change_pending = false, false, false, false, false, false, false, false
 local redraw_params, hold, holdmax, first, second = {}, {}, {}, {}, {}
@@ -226,9 +226,9 @@ local function save_project(txt)
   --clock.cancel(redraw_clock)
   engine.noteOffAll()
   comp_shut(is_running)
-  if pattern_name ~= nil then
-    print("pattern_name ", pattern_name)
-  end
+  --if pattern_name ~= nil then
+    --print("pattern_name ", pattern_name)
+  --end
   if txt then
     tab.save({ txt, data }, norns.state.data .. txt ..".tkt")
     params:write( norns.state.data .. txt .. ".pset")
@@ -911,7 +911,7 @@ function init()
 
     params:add_trigger('save_p', "< Save project" )
     --params:set_action('save_p', function(x) textentry.enter(save_project,  'new') end)
-    params:set_action('save_p', function(x) if pattern_name ~= nil then textentry.enter(save_project,  pattern_name) else textentry.enter(save_project,  'new') end end)
+    params:set_action('save_p', function(x) textentry.enter(save_project,  pattern_name) end)
     params:add_trigger('load_p', "> Load project" )
     params:set_action('load_p', function(x) fileselect.enter(norns.state.data, load_project) end)
     params:add_trigger('new', "+ New" )
