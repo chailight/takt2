@@ -184,7 +184,7 @@ local function load_project(pth)
     local saved = tab.load(pth)
     if saved ~= nil then
       print("data found")
-      pattern_name = saved
+      pattern_name = saved[1]
       for k,v in pairs(saved[2]) do 
         data[k] = v
       end
@@ -227,7 +227,7 @@ local function save_project(txt)
   engine.noteOffAll()
   comp_shut(is_running)
   if pattern_name ~= nil then
-    print("pattern_name ", pattern_name[1])
+    print("pattern_name ", pattern_name)
   end
   if txt then
     tab.save({ txt, data }, norns.state.data .. txt ..".tkt")
