@@ -13,6 +13,9 @@ local midi_name_lookup = {
   [1] = 'note', [2] = 'velocity', [3] = 'length', [4] = 'channel', [5] = 'device', [6] = 'program_change', 
   [7] = 'cc_1_val', [8] = 'cc_2_val', [9] = 'cc_3_val', [10] = 'cc_3_val', [11] = 'cc_4_val', [12] = 'cc_4_val'
 }
+
+local chord_name_lookup = {"M", "M6", "M7", "M69", "M9", "M11", "M13", "D7", "9", "11", "13", "Aug", "A7", "Sus4", "7Sus4", "mM7", "m", "m6", "m7", "m9", "m69", "m9", "m11", "m13", "Dim", "Dim7", "hD7"}
+
 local dividers  = {[0] = 'OFF', '1/8', '1/4', '1/2', '3/4', '--', '3/2', '2x' } 
 
 local filter = controlspec.WIDEFREQ
@@ -439,12 +442,33 @@ function ui.draw_note(x, y, params_data, index, ui_index, lock)
   screen.fill()
   local offset = params_data.detune_cents and util.linlin(-100,100,-3,3, params_data.detune_cents) or 0
   screen.level(0)
-  screen.rect(x + 7 + offset, y + 6, 3, 2)
-  screen.rect(x + 8 + offset, y + 6, 3, 1)
-  screen.rect(x + 10 + offset, y +2, 1, 4)
-  screen.rect(x + 11 + offset, y + 3, 1, 1)
-  screen.rect(x + 12 + offset, y + 4, 1, 1)
-  screen.fill()
+  if not params_data.chord or params_data.chord <= 0 then 
+      if ui_index == 19 then
+        screen.level(15)
+      else
+        screen.level(0)
+      end
+      --print("ui chord", params_data.chord)
+      screen.rect(x + 7 + offset, y + 6, 3, 2)
+      screen.rect(x + 8 + offset, y + 6, 3, 1)
+      screen.rect(x + 10 + offset, y +2, 1, 4)
+      screen.rect(x + 11 + offset, y + 3, 1, 1)
+      screen.rect(x + 12 + offset, y + 4, 1, 1)
+      screen.fill()
+  --elseif params_data.chord > -1 then
+  --if true then 
+  elseif params_data.chord then
+      if ui_index == 19 then
+        screen.level(15)
+      else
+        screen.level(0)
+      end
+      --print("ui chord", params_data.chord)
+      screen.move(x + 9, y + 7)
+      --print("ui chord", params_data.chord)
+     -- screen.text_center("M")
+     screen.text_center(chord_name_lookup[tonumber(params_data.chord)])
+  end 
   
   local note_name = params_data.note
   local oct = math.floor(note_name / 12 - 2) == 0 and '' or math.floor(note_name / 12 - 2)
@@ -516,6 +540,25 @@ function ui.tile(index, name, value, ui_index, lock, custom)
   end
 
   if string.len(tostring(value)) > 4 then local value = util.round(value, 0.01) end
+  if name then
+      if name == "DEV" then
+        --print ("name", name)
+        local disp_value = " " 
+        if value < 5 then 
+            disp_value = value 
+        elseif value == 5 and params:get("takt_jf") == 2 then 
+            disp_value = "JF" 
+        elseif value == 6 and params:get("takt_wsyn") == 2 then 
+            disp_value = "W/" 
+        elseif value == 7 and params:get("takt_crow") == 2 then 
+            disp_value = "CROW" 
+        else
+            disp_value = disp_value 
+        end
+        value = disp_value 
+        --print ("dev", value)
+      end
+   end
   
   screen.text_center(value)
   screen.stroke()

@@ -100,6 +100,8 @@ local rules = {
 
 --- utils, load/save
 
+local chord_names = {"Major", "Major 6", "Major 7", "Major 69", "Major 9", "Major 11", "Major 13", "Dominant 7", "Ninth", "Eleventh", "Thirteenth", "Augmented", "Augmented 7", "Sus4", "Seventh sus4", "Minor Major 7", "Minor", "Minor 6", "Minor 7", "Minor 9", "Minor 69", "Minor 9", "Minor 11", "Minor 13", "Diminished", "Diminished 7", "Half Diminished 7"}
+
 local function to_id(x, y)
   return  x + ((y - 1) * 16) 
 end
@@ -293,6 +295,7 @@ local function set_cc(step_param)
     local val = step_param['cc_' .. i .. '_val'] 
     if val > -1 then
       midi_out_devices[step_param.device]:cc(cc, val, step_param.channel)
+      --print("cc", cc, vale, step_param.channel)
     end
   end
 end
@@ -553,6 +556,10 @@ local function seqrun(counter)
         if tr > 7 and choke[tr][6] then
           if pos > choke[tr][5] + choke[tr][6] then
             midi_out_devices[choke[tr][1]]:note_off(choke[tr][2], choke[tr][3], choke[tr][4])
+            if true then
+                midi_out_devices[choke[tr][1]]:note_off(choke[tr][2]+4, choke[tr][3], choke[tr][4])
+                midi_out_devices[choke[tr][1]]:note_off(choke[tr][2]+7, choke[tr][3], choke[tr][4])
+            end
           end
         end
         
@@ -589,6 +596,10 @@ local function seqrun(counter)
               end
 
               midi_out_devices[step_param.device]:note_on( step_param.note, step_param.velocity, step_param.channel )
+              if true then
+                midi_out_devices[step_param.device]:note_on( step_param.note + 4, step_param.velocity, step_param.channel )
+                midi_out_devices[step_param.device]:note_on( step_param.note + 7, step_param.velocity, step_param.channel )
+              end
               choke[tr] = { step_param.device, step_param.note, step_param.velocity, step_param.channel, pos, step_param.length} 
             end
           end
@@ -674,7 +685,7 @@ local midi_step_params = {
       data[data.pattern][tr].params[s].channel = util.clamp(data[data.pattern][tr].params[s].channel + d, 1, 16)
   end,
   [5] = function(tr, s, d) -- device
-      data[data.pattern][tr].params[s].device = util.clamp(data[data.pattern][tr].params[s].device + d, 1, 4)
+      data[data.pattern][tr].params[s].device = util.clamp(data[data.pattern][tr].params[s].device + d, 1, 7)
   end,
   [6] = function(tr, s, d) -- pgm
       data[data.pattern][tr].params[s].program_change = util.clamp(data[data.pattern][tr].params[s].program_change + d, -1, 127)
@@ -716,6 +727,9 @@ local midi_step_params = {
   end,
   [18] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_6 = util.clamp(data[data.pattern][tr].params[s].cc_6 + d, 1, 127)
+  end,
+  [19] = function(tr, s, d) -- chord
+      data[data.pattern][tr].params[s].chord = util.clamp(data[data.pattern][tr].params[s].chord + d, -1, 25)
   end,
 
 }
@@ -917,7 +931,24 @@ function init()
     params:add_trigger('new', "+ New" )
     params:set_action('new', function(x) init() end)
     params:add_separator()
+    params:add_option("takt_crow","crow output",{"no","yes"},1)
+    params:add_option("takt_jf","jf output",{"no","yes"},1)
+    params:add_option("takt_wsyn","wsyn output",{"no","yes"},1)
+    params:set_action("takt_jf",function(x)
+        if x==2 then
+          crow.ii.jf.mode(1)
+        end
+    end)
+    params:set_action("takt_wsyn",function(x)
+        if x==2 then
+          crow.ii.wsyn.play_voice(0,0,0)
+        end
+    end)
+    wsyn_add_params()
+    params:bang()
+    params:set("wsyn_init",1)
 
+    params:add_separator()
       
     for i = 1, 14 do
       hold[i] = 0
@@ -1043,7 +1074,25 @@ function simple_seqrun(counter)
         
         if tr > 7 and choke[tr][6] then
           if pos > choke[tr][5] + choke[tr][6] then
-            midi_out_devices[choke[tr][1]]:note_off(choke[tr][2], choke[tr][3], choke[tr][4])
+            --if params:get("takt_wsyn")==2 then
+            --    crow.ii.wsyn.play_note((choke[tr][2]-60)/12,0))
+            --    print("end wsyn note")
+            --else
+            if choke[tr][1] < 5 then
+                midi_out_devices[choke[tr][1]]:note_off(choke[tr][2], choke[tr][3], choke[tr][4])
+            end
+            --if params:get("takt_wsyn")==2 then
+                --crow.ii.wsyn.play_note((choke[tr][2]-60)/12,util.linlin(0,1.0,0,10,0))
+                --print("end wsyn chord")
+            --else
+            if choke[tr][1] < 5 then
+                if choke[tr][7] > -1 then
+                    local chord = music.generate_chord(choke[tr][2],chord_names[choke[tr][7]]) 
+                    for i = 2, #chord do
+                        midi_out_devices[choke[tr][1]]:note_off(chord[i], choke[tr][3], choke[tr][4])
+                    end
+                end
+            end
           end
         end
         
@@ -1072,15 +1121,50 @@ function simple_seqrun(counter)
               choke[tr] = step_param.sample
               
             else
-              
-              set_cc(step_param)
-              
-              if step_param.program_change >= 0 then
-                midi_out_devices[step_param.device]:program_change(step_param.program_change, step_param.channel)
-              end
+              if params:get("takt_jf")==2 and step_param.device == 5 then 
+                  crow.ii.jf.play_note((step_param.note-60)/12,(step_param.velocity/127) * 10)
+                  if step_param.chord then
+                      if step_param.chord > -1 then
+                        local chord = music.generate_chord(step_param.note,chord_names[step_param.chord]) 
+                        for i = 2, #chord do
+                            crow.ii.jf.play_note((chord[i]-60)/12,(step_param.velocity/127) * 10)
+                        end
+                      end
+                  end
+              elseif params:get("takt_wsyn")==2 and step_param.device == 6 then 
+                  crow.ii.wsyn.lpg_time(util.linlin(1,127,5,-5,step_param.length))
+                  crow.ii.wsyn.play_note((step_param.note-60)/12,(step_param.velocity/127) * 5)
+                  if step_param.chord then
+                      if step_param.chord > -1 then
+                        local chord = music.generate_chord(step_param.note,chord_names[step_param.chord]) 
+                        for i = 2, #chord do
+                            crow.ii.wsyn.play_note((chord[i]-60)/12,(step_param.velocity/127) * 5)
+                        end
+                      end
+                  end
+              else
+                  set_cc(step_param)
+                  
+                  if step_param.program_change >= 0 then
+                    midi_out_devices[step_param.device]:program_change(step_param.program_change, step_param.channel)
+                  end
 
-              midi_out_devices[step_param.device]:note_on( step_param.note, step_param.velocity, step_param.channel )
-              choke[tr] = { step_param.device, step_param.note, step_param.velocity, step_param.channel, pos, step_param.length} 
+                  midi_out_devices[step_param.device]:note_on( step_param.note, step_param.velocity, step_param.channel )
+                  if step_param.chord then
+                      if step_param.chord > -1 then
+                        local chord = music.generate_chord(step_param.note,chord_names[step_param.chord]) 
+                        --print("root", step_param.note)
+                        --print("chord", chord, #chord)
+                        --print("chord on", chord, chord_names[step_param.chord])
+                        for i = 2, #chord do
+                            --print("chord on", i, chord[i]) 
+                            midi_out_devices[step_param.device]:note_on( chord[i], step_param.velocity, step_param.channel )
+                            --midi_out_devices[step_param.device]:note_on( step_param.note+7, step_param.velocity, step_param.channel )
+                        end
+                      end
+                  end
+                  choke[tr] = { step_param.device, step_param.note, step_param.velocity, step_param.channel, pos, step_param.length, step_param.chord} 
+              end
             end
           end
        end
@@ -1147,7 +1231,8 @@ function enc(n,d)
     
     if not view.sampling then
       if not K1_is_hold() then 
-        data.ui_index = util.clamp(data.ui_index + d, not data.selected[2] and 1 or -3, (view.steps_midi or view.patterns) and 18 or 20)
+        --print("enc 2", data.ui_index, d)
+        data.ui_index = util.clamp(data.ui_index + d, not data.selected[2] and 1 or -3, (view.steps_midi or view.patterns) and 19 or 20) 
       else
         data.ui_index = util.clamp(data.ui_index + d, view.patterns and -1 or -6, -1)
       end
@@ -1175,13 +1260,30 @@ function enc(n,d)
 
       if K1_is_hold() then
         track_params[data.ui_index](tr, p, d)
+          --print("K1", K1_is_hold())
       else
         
           local params_t = data.ui_index < 1 and trig_params or tr < 8 and step_params or tr > 7 and midi_step_params
       
           if type(p) == 'string' then
-            params_t[data.ui_index](tr, p, d)
+            --print("p is string", p)
+            if K3_is_hold() and data.ui_index == 1 and data[data.pattern][tr].params[s].chord then 
+                params_t[19](tr, p, d)
+                --print("chord", data[data.pattern][tr].params[s].chord)
+            else
+
+
+              params_t[data.ui_index](tr, p, d)
+              --print("K3", K3_is_hold())
+              --print("data.ui_index", data.ui_index)
+              --print("p", p)
+              --print("params", params_t[data.ui_index])
+              --print("tr, t, d", tr, t, d)
+            end
           else
+            --print("p not string", p)
+            --print("t", t)
+            --print("data.ui_index", data.ui_index)
             if data.ui_index > 0 then
               for i = t, t + 15 do params_t[data.ui_index](tr, i, d) end
             else
@@ -1189,7 +1291,7 @@ function enc(n,d)
             end
           end
 
-      if view.notes_input then set_locks(get_params(tr)) end
+          if view.notes_input then set_locks(get_params(tr)) end
       end
     else
       sampling_params[data.ui_index](d)
@@ -1199,7 +1301,7 @@ end
 
 function key(n,z)
   K1_hold = (n == 1 and z == 1) and true or false
-  K3_hold = (n == 1 and z == 1) and true or false
+  K3_hold = (n == 3 and z == 1) and true or false
   if browser.open then
     browser.key(n, z)
 
@@ -1219,36 +1321,40 @@ function key(n,z)
       browser.exit()
     end
   elseif n == 3 then
-    if view.sampling then
+      if view.sampling then
         sampling_actions[data.ui_index](z)
         if z == 1 and ((data.ui_index == 1 and sampler.rec) or data.ui_index == 4) then ui.waveform = {} end
-    elseif view.patterns then 
+      elseif view.patterns then 
         --open_settings(2)
         --open_settings(3.5)
         --open_settings(5.5)
       elseif not view.steps_midi then
-      if data.ui_index == 1 and z == 1  then 
-          local sample_id = data[data.pattern][data.selected[1]].params[is_lock()].sample
-          browser.enter(_path.audio, timber.load_sample, sample_id)
-      elseif (data.ui_index == 3 or data.ui_index == 4) and z == 1 and sample_not_loaded(get_sample()) then
-          local sample_id = data[data.pattern][data.selected[1]].params[is_lock()].sample
-          browser.enter(_path.audio, timber.load_sample, sample_id)
-      elseif (data.ui_index == 17 or data.ui_index == 18) and z == 1 then
-          change_filter_type()
-      elseif lfo_1[data.ui_index] then
-          set_view('patterns')
-          data.ui_index = 15
-      elseif lfo_2[data.ui_index] then
-          set_view('patterns')
-          data.ui_index = 17
-      elseif data.ui_index == 19 then
-          set_view('patterns')
-          data.ui_index = 12
-      elseif data.ui_index == 20 then
-          set_view('patterns')
-          data.ui_index = 8
+          if data.ui_index == 1 and z == 1  then 
+              local sample_id = data[data.pattern][data.selected[1]].params[is_lock()].sample
+              browser.enter(_path.audio, timber.load_sample, sample_id)
+          elseif (data.ui_index == 3 or data.ui_index == 4) and z == 1 and sample_not_loaded(get_sample()) then
+              local sample_id = data[data.pattern][data.selected[1]].params[is_lock()].sample
+              browser.enter(_path.audio, timber.load_sample, sample_id)
+          elseif (data.ui_index == 17 or data.ui_index == 18) and z == 1 then
+              change_filter_type()
+          elseif lfo_1[data.ui_index] then
+              set_view('patterns')
+              data.ui_index = 15
+          elseif lfo_2[data.ui_index] then
+              set_view('patterns')
+              data.ui_index = 17
+          elseif data.ui_index == 19 then
+              set_view('patterns')
+              data.ui_index = 12
+          elseif data.ui_index == 20 then
+              set_view('patterns')
+              data.ui_index = 8
+          end
+      --else
+      --    if data.ui_index == 1 then
+      --        data.ui_index = 12
+      --    end
       end
-    end
   end
 end
 
@@ -1303,7 +1409,7 @@ function g.key(x, y, z)
   if view.notes_input and not ALT and not SHIFT then
     local tr = data.selected[1]
     local device = data[data.pattern][tr].params[tr].device
-    local note = linn.grid_key(x, y, z, device and midi_out_devices[device])
+    local note = linn.grid_key(x, y, z, device and midi_out_devices[device]) -- adjust this for jf and wsyn
     local pos = data[data.pattern].track.pos[tr]
     if note then 
       if tr < 8 then
@@ -1497,5 +1603,155 @@ function g.redraw()
   
   g:refresh()
 
+end
+
+function wsyn_add_params()
+  params:add_group("w/syn",12)
+  params:add {
+    type = "option",
+    id = "wsyn_ar_mode",
+    name = "AR mode",
+    options = {"off", "on"},
+    default = 2,
+    action = function(val)
+      crow.send("ii.wsyn.ar_mode(".. (val-1) ..")")
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_vel",
+    name = "Velocity",
+    controlspec = controlspec.new(0, 5, "lin", 0, 2, "v"),
+    action = function(val)
+      pset_wsyn_vel = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_curve",
+    name = "Curve",
+    controlspec = controlspec.new(-5, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.curve(" .. val .. ")")
+      pset_wsyn_curve = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_ramp",
+    name = "Ramp",
+    controlspec = controlspec.new(-5, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.ramp(" .. val .. ")")
+      pset_wsyn_ramp = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_fm_index",
+    name = "FM index",
+    controlspec = controlspec.new(0, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.fm_index(" .. val .. ")")
+      pset_wsyn_fm_index = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_fm_env",
+    name = "FM env",
+    controlspec = controlspec.new(-5, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.fm_env(" .. val .. ")")
+      pset_wsyn_fm_env = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_fm_ratio_num",
+    name = "FM ratio numerator",
+    controlspec = controlspec.new(1, 20, "lin", 1, 2),
+    action = function(val)
+      crow.send("ii.wsyn.fm_ratio(" .. val .. "," .. params:get("wsyn_fm_ratio_den") .. ")")
+      pset_wsyn_fm_ratio_num = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_fm_ratio_den",
+    name = "FM ratio denominator",
+    controlspec = controlspec.new(1, 20, "lin", 1, 1),
+    action = function(val)
+      crow.send("ii.wsyn.fm_ratio(" .. params:get("wsyn_fm_ratio_num") .. "," .. val .. ")")
+      pset_wsyn_fm_ratio_den = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_lpg_time",
+    name = "LPG time",
+    controlspec = controlspec.new(-5, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.lpg_time(" .. val .. ")")
+      pset_wsyn_lpg_time = val
+    end
+  }
+  params:add {
+    type = "control",
+    id = "wsyn_lpg_symmetry",
+    name = "LPG symmetry",
+    controlspec = controlspec.new(-5, 5, "lin", 0, 0, "v"),
+    action = function(val)
+      crow.send("ii.wsyn.lpg_symmetry(" .. val .. ")")
+      pset_wsyn_lpg_symmetry = val
+    end
+  }
+  params:add{
+    type = "trigger",
+    id = "wsyn_pluckylog",
+    name = "Pluckylogger >>>",
+    action = function()
+      params:set("wsyn_curve", math.random(-40, 40)/10)
+      params:set("wsyn_ramp", math.random(-5, 5)/10)
+      params:set("wsyn_fm_index", math.random(-50, 50)/10)
+      params:set("wsyn_fm_env", math.random(-50, 40)/10)
+      params:set("wsyn_fm_ratio_num", math.random(1, 4))
+      params:set("wsyn_fm_ratio_den", math.random(1, 4))
+      params:set("wsyn_lpg_time", math.random(-28, -5)/10)
+      params:set("wsyn_lpg_symmetry", math.random(-50, -30)/10)
+    end
+  }
+  params:add{
+    type = "trigger",
+    id = "wsyn_randomize",
+    name = "Randomize all >>>",
+    action = function()
+      params:set("wsyn_curve", math.random(-50, 50)/10)
+      params:set("wsyn_ramp", math.random(-50, 50)/10)
+      params:set("wsyn_fm_index", math.random(0, 50)/10)
+      params:set("wsyn_fm_env", math.random(-50, 50)/10)
+      params:set("wsyn_fm_ratio_num", math.random(1, 20))
+      params:set("wsyn_fm_ratio_den", math.random(1, 20))
+      params:set("wsyn_lpg_time", math.random(-50, 50)/10)
+      params:set("wsyn_lpg_symmetry", math.random(-50, 50)/10)
+    end
+  }
+  params:add{
+    type = "trigger",
+    id = "wsyn_init",
+    name = "Init",
+    action = function()
+      params:set("wsyn_curve", pset_wsyn_curve)
+      params:set("wsyn_ramp", pset_wsyn_ramp)
+      params:set("wsyn_fm_index", pset_wsyn_fm_index)
+      params:set("wsyn_fm_env", pset_wsyn_fm_env)
+      params:set("wsyn_fm_ratio_num", pset_wsyn_fm_ratio_num)
+      params:set("wsyn_fm_ratio_den", pset_wsyn_fm_ratio_den)
+      params:set("wsyn_lpg_time", pset_wsyn_lpg_time)
+      params:set("wsyn_lpg_symmetry", pset_wsyn_lpg_symmetry)
+      params:set("wsyn_vel", pset_wsyn_vel)
+    end
+  }
+  params:hide("wsyn_init")
 end
 

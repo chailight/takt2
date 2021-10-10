@@ -32,6 +32,7 @@ local function default_engine_params(i)
       cc_1 = 1, cc_1_val = -1, cc_2 = 2, cc_2_val = -1,
       cc_3 = 3, cc_3_val = -1, cc_4 = 4, cc_4_val = -1,
       cc_5 = 5, cc_5_val = -1, cc_6 = 6, cc_6_val = -1,
+      chord = -1,
     }
     return default
   end

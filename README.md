@@ -2,15 +2,33 @@
 updates to the monome takt script to incorporate global clock updates etc.
 original documentation below
 
+Current additions:
+- updated to global clock
+- will sync to Ableton Link and crow
+- will send sync via crow
+- can select 1-4 MIDI devices as a synth output 
+- can select JF via crow as a synth output 
+- can selet W/syn via crow as an output 
+- W/syn paramters can be edited as part of the patch
+- can select chords of various types instead of just single notes on syth page
+- chord types can be p-locked, just like notes
+
+To Do:
+- further adjust synth page depending on output for the track
+- replace PGM with ARP for JF?
+- replace CC controls with Arp controls for JF? 
+- enable W/syn PGM to load various presets?
+- replace CC controls with W/Syn controls for W/syn
+- enable Linn input for JF and W/syn
+- enable crow output
+- enable CC values to be an LFO instead of a fixed value 
+- add a bunch of LFOs that can be controlled via Params?
+
 Current issues:
 
-- stop will work but won't restart
-- you need to run sq clock.run(sequencer) from maiden to get it starting again
-- the tempo seems to be too fast - not sure I have the clock.sync argument correct
-- midi integration is untested
-- midi stop and start messages need to be added
-- link integration appears to work 
-- tempo display doesn't reflect actual clock tempo when clock is not internal
+- metronome seems to get faster when the tempo slows down 
+- some crockles occasionally - maybe compare cpu load to original takt
+- Linn input on grid doesn't play JF or W/syn
 
 
 ![docs](lib/doc.png)
