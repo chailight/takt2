@@ -12,6 +12,7 @@ Current additions:
 - W/syn paramters can be edited as part of the patch
 - can select chords of various types instead of just single notes on syth page
 - chord types can be p-locked, just like notes
+- added LFO support for midi CC
 
 To Do:
 - further adjust synth page depending on output for the track
@@ -21,14 +22,17 @@ To Do:
 - replace CC controls with W/Syn controls for W/syn
 - enable Linn input for JF and W/syn
 - enable crow output
-- enable CC values to be an LFO instead of a fixed value 
-- add a bunch of LFOs that can be controlled via Params?
+- Instead of blank space in Synth device, display "JF", "W/" or "Crow" greyed out in they are not enabled.
 
 Current issues:
 
 - metronome seems to get faster when the tempo slows down 
 - some crockles occasionally - maybe compare cpu load to original takt
 - Linn input on grid doesn't play JF or W/syn
+- Saving a project restarts the clock even if the clock is stopped 
+- Note symbol gets highlighted when selecting the DEL tile on the main page - fixed?
+- MIDI PGM change gets sent every time instead of just once when track starts
+- Loading a project which is saved on the midi view page doesn't display correctly at first
 
 
 ![docs](lib/doc.png)

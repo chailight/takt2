@@ -3,7 +3,8 @@
 -- 
 -- parameter locking sequencer
 --
--- global clock updates by @chailight
+-- global clock updates 
+-- by @chailight
 
 local sampler = include('lib/sampler')
 local browser = include('lib/browser')
@@ -11,6 +12,7 @@ local timber = include('lib/timber_takt')
 local takt_utils = include('lib/_utils')
 local ui = include('lib/ui')
 local linn = include('lib/linn')
+local lfo = include("lib/hnds")
 -- local beatclock = require 'beatclock'
 local music = require 'musicutil'
 local fileselect = require('fileselect')
@@ -37,6 +39,51 @@ local send_map = controlspec.new(-48, 0, 'db', 0, -48, "dB")--.DB
 local sidechain_map = controlspec.new(-99, 0, 'db', 0, -99, "dB")--.DB
 local threshold_map  = controlspec.new(0.01, 1, "exp", 0.001, 0.1, "")
 local time_map = controlspec.new(0.0001, 5, 'exp', 0, 0.1, 's')
+local lfo_targets = {
+    "none",
+    "CC1 8",
+    "CC2 8",
+    "CC3 8",
+    "CC4 8",
+    "CC5 8",
+    "CC6 8",
+    "CC1 9",
+    "CC2 9",
+    "CC3 9",
+    "CC4 9",
+    "CC5 9",
+    "CC6 9",
+    "CC1 10",
+    "CC2 10",
+    "CC3 10",
+    "CC4 10",
+    "CC5 10",
+    "CC6 10",
+    "CC1 11",
+    "CC2 11",
+    "CC3 11",
+    "CC4 11",
+    "CC5 11",
+    "CC6 11",
+    "CC1 12",
+    "CC2 12",
+    "CC3 12",
+    "CC4 12",
+    "CC5 12",
+    "CC6 12",
+    "CC1 13",
+    "CC2 13",
+    "CC3 13",
+    "CC4 13",
+    "CC5 13",
+    "CC6 13",
+    "CC1 14",
+    "CC2 14",
+    "CC3 14",
+    "CC4 14",
+    "CC5 14",
+    "CC6 14"
+}
 
 --
 local g = grid.connect()
@@ -100,7 +147,9 @@ local rules = {
 
 --- utils, load/save
 
-local chord_names = {"Major", "Major 6", "Major 7", "Major 69", "Major 9", "Major 11", "Major 13", "Dominant 7", "Ninth", "Eleventh", "Thirteenth", "Augmented", "Augmented 7", "Sus4", "Seventh sus4", "Minor Major 7", "Minor", "Minor 6", "Minor 7", "Minor 9", "Minor 69", "Minor 9", "Minor 11", "Minor 13", "Diminished", "Diminished 7", "Half Diminished 7"}
+local chord_names = {"Major", "Minor", "Dominant 7", "Major 7", "Minor 7", "Minor Major 7", "Major 6", "Minor 6", "Major 69", "Minor 69", "Ninth", "Major 9", "Minor 9", "Eleventh", "Major 11", "Minor 11", "Thirteenth", "Major 13", "Minor 13", "Sus4", "Seventh sus4", "Diminished", "Diminished 7", "Half Diminished 7", "Augmented", "Augmented 7"}
+
+local wsyn_params = {"Curve", "Ramp", "FM index", "FM env", "FM ratio numerator", "FM ratio denominator", "LPG time", "LPG symmetry"}
 
 local function to_id(x, y)
   return  x + ((y - 1) * 16) 
@@ -238,6 +287,7 @@ local function save_project(txt)
     print("save cancel")
   end
   redraw_metro:start()
+  clock.transport.start()
   --redraw_clock = clock.run(redraw_callback)
 end
 
@@ -289,13 +339,32 @@ local function set_locks(step_param)
       end
     end
 end
-local function set_cc(step_param)
+
+-- move this into the track processing logic
+--function lfo.process()
+ --   for i = 1, 4 do
+        --local target = params:get(i .. "lfo_target")
+        --midi_out_devices[step_param.device]:cc(target, lfo.scale(lfo[i].slope, -1, 1,1, 127), step_param.channel)
+        --params:set(lfo_targets[target],lfo.scale(lfo[i].slope, -1, 1, 1, 127))
+  --  end
+-- end
+
+local function set_cc(tr, step_param)
   for i = 1, 6 do
     local cc = step_param['cc_' .. i] 
     local val = step_param['cc_' .. i .. '_val'] 
+    for j = 1, 4 do
+        local target = params:get(j .. "lfo_target")
+        --print ("state", j, params:get(j .. "lfo"))
+        if  tonumber(target) - 1 - ((tr - 8) * 6) == i and params:get(j .. "lfo") == 2 then
+            --val = lfo[j].slope 
+            val = math.floor(math.abs(lfo.scale(lfo[j].slope, -1, 1, 1, 127)))
+            print("target", target - 1 - ((tr - 8) * 6), val)
+        end
+    end
     if val > -1 then
       midi_out_devices[step_param.device]:cc(cc, val, step_param.channel)
-      --print("cc", cc, vale, step_param.channel)
+      --print("cc", cc, val, step_param.device,step_param.channel)
     end
   end
 end
@@ -589,7 +658,7 @@ local function seqrun(counter)
               
             else
               
-              set_cc(step_param)
+              set_cc(tr, step_param)
               
               if step_param.program_change >= 0 then
                 midi_out_devices[step_param.device]:program_change(step_param.program_change, step_param.channel)
@@ -675,61 +744,61 @@ local midi_step_params = {
   [1] = function(tr, s, d) -- note
       data[data.pattern][tr].params[s].note = util.clamp(data[data.pattern][tr].params[s].note + d, 25, 127)
   end,
-  [2] = function(tr, s, d) -- velocity
+  [2] = function(tr, s, d) -- chord
+      data[data.pattern][tr].params[s].chord = util.clamp(data[data.pattern][tr].params[s].chord + d, -1, 26)
+  end,
+  [3] = function(tr, s, d) -- velocity
       data[data.pattern][tr].params[s].velocity = util.clamp(data[data.pattern][tr].params[s].velocity + d, 0, 127)
   end,
-  [3] = function(tr, s, d) -- length
+  [4] = function(tr, s, d) -- length
       data[data.pattern][tr].params[s].length = util.clamp(data[data.pattern][tr].params[s].length + d, 1, 256)
   end,
-  [4] = function(tr, s, d) -- channel
+  [5] = function(tr, s, d) -- channel
       data[data.pattern][tr].params[s].channel = util.clamp(data[data.pattern][tr].params[s].channel + d, 1, 16)
   end,
-  [5] = function(tr, s, d) -- device
+  [6] = function(tr, s, d) -- device
       data[data.pattern][tr].params[s].device = util.clamp(data[data.pattern][tr].params[s].device + d, 1, 7)
   end,
-  [6] = function(tr, s, d) -- pgm
+  [7] = function(tr, s, d) -- pgm
       data[data.pattern][tr].params[s].program_change = util.clamp(data[data.pattern][tr].params[s].program_change + d, -1, 127)
   end,
   
-  [7] = function(tr, s, d) -- 
+  [8] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_1_val = util.clamp(data[data.pattern][tr].params[s].cc_1_val + d, -1, 127)
   end,
-  [8] = function(tr, s, d) -- 
+  [9] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_2_val = util.clamp(data[data.pattern][tr].params[s].cc_2_val + d, -1, 127)
   end,
-  [9] = function(tr, s, d) -- 
+  [10] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_3_val = util.clamp(data[data.pattern][tr].params[s].cc_3_val + d, -1, 127)
   end,
-  [10] = function(tr, s, d) -- 
+  [11] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_4_val = util.clamp(data[data.pattern][tr].params[s].cc_4_val + d, -1, 127)
   end,
-  [11] = function(tr, s, d) -- 
+  [12] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_5_val = util.clamp(data[data.pattern][tr].params[s].cc_5_val + d, -1, 127)
   end,
-  [12] = function(tr, s, d) -- 
+  [13] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_6_val = util.clamp(data[data.pattern][tr].params[s].cc_6_val + d, -1, 127)
   end,
   
-  [13] = function(tr, s, d) -- 
+  [14] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_1 = util.clamp(data[data.pattern][tr].params[s].cc_1 + d, 1, 127)
   end,
-  [14] = function(tr, s, d) -- 
+  [15] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_2 = util.clamp(data[data.pattern][tr].params[s].cc_2 + d, 1, 127)
   end,
-  [15] = function(tr, s, d) -- 
+  [16] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_3 = util.clamp(data[data.pattern][tr].params[s].cc_3 + d, 1, 127)
   end,
-  [16] = function(tr, s, d) -- 
+  [17] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_4 = util.clamp(data[data.pattern][tr].params[s].cc_4 + d, 1, 127)
   end,
-  [17] = function(tr, s, d) -- 
+  [18] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_5 = util.clamp(data[data.pattern][tr].params[s].cc_5 + d, 1, 127)
   end,
-  [18] = function(tr, s, d) -- 
+  [19] = function(tr, s, d) -- 
       data[data.pattern][tr].params[s].cc_6 = util.clamp(data[data.pattern][tr].params[s].cc_6 + d, 1, 127)
-  end,
-  [19] = function(tr, s, d) -- chord
-      data[data.pattern][tr].params[s].chord = util.clamp(data[data.pattern][tr].params[s].chord + d, -1, 25)
   end,
 
 }
@@ -949,7 +1018,14 @@ function init()
     params:set("wsyn_init",1)
 
     params:add_separator()
+
+    for i = 1, 4 do
+        lfo[i].lfo_targets = lfo_targets
+    end
+    lfo.init()
       
+    params:add_separator()
+
     for i = 1, 14 do
       hold[i] = 0
       holdmax[i] = 0
@@ -1143,7 +1219,7 @@ function simple_seqrun(counter)
                       end
                   end
               else
-                  set_cc(step_param)
+                  set_cc(tr, step_param)
                   
                   if step_param.program_change >= 0 then
                     midi_out_devices[step_param.device]:program_change(step_param.program_change, step_param.channel)
@@ -1268,11 +1344,9 @@ function enc(n,d)
           if type(p) == 'string' then
             --print("p is string", p)
             if K3_is_hold() and data.ui_index == 1 and data[data.pattern][tr].params[s].chord then 
-                params_t[19](tr, p, d)
+                params_t[2](tr, p, d)
                 --print("chord", data[data.pattern][tr].params[s].chord)
             else
-
-
               params_t[data.ui_index](tr, p, d)
               --print("K3", K3_is_hold())
               --print("data.ui_index", data.ui_index)
@@ -1397,7 +1471,7 @@ function redraw(stage)
       ui.main_screen(redraw_params[1], data.ui_index, meta)
       if browser.open then browser.redraw() end
     else
-      ui.midi_screen(redraw_params[1], data.ui_index, data[data.pattern].track, data[data.pattern])
+      ui.midi_screen(data.selected[1],redraw_params[1], data.ui_index, data[data.pattern].track, data[data.pattern])
     end
   end
   screen.update()

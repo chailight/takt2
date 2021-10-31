@@ -14,7 +14,9 @@ local midi_name_lookup = {
   [7] = 'cc_1_val', [8] = 'cc_2_val', [9] = 'cc_3_val', [10] = 'cc_3_val', [11] = 'cc_4_val', [12] = 'cc_4_val'
 }
 
-local chord_name_lookup = {"M", "M6", "M7", "M69", "M9", "M11", "M13", "D7", "9", "11", "13", "Aug", "A7", "Sus4", "7Sus4", "mM7", "m", "m6", "m7", "m9", "m69", "m9", "m11", "m13", "Dim", "Dim7", "hD7"}
+local chord_name_lookup = {"M", "m", "D7", "M7", "m7", "mM7", "M6", "m6", "M69", "m69", "D9", "M9", "m9", "D11", "M11", "m11", "D13", "M13", "m13", "Sus4", "7Sus4", "Dim", "Dim7", "hD7", "Aug", "A7" }
+
+local wsyn_params_lookup = {"Curve", "Ramp", "FM i", "FM e", "RN", "RD", "Time", "Sym"}
 
 local dividers  = {[0] = 'OFF', '1/8', '1/4', '1/2', '3/4', '--', '3/2', '2x' } 
 
@@ -443,7 +445,7 @@ function ui.draw_note(x, y, params_data, index, ui_index, lock)
   local offset = params_data.detune_cents and util.linlin(-100,100,-3,3, params_data.detune_cents) or 0
   screen.level(0)
   if not params_data.chord or params_data.chord <= 0 then 
-      if ui_index == 19 then
+      if ui_index == 2 then -- work out how to restrict this to the midi screen
         screen.level(15)
       else
         screen.level(0)
@@ -458,7 +460,7 @@ function ui.draw_note(x, y, params_data, index, ui_index, lock)
   --elseif params_data.chord > -1 then
   --if true then 
   elseif params_data.chord then
-      if ui_index == 19 then
+      if ui_index == 2 then
         screen.level(15)
       else
         screen.level(0)
@@ -538,27 +540,28 @@ function ui.tile(index, name, value, ui_index, lock, custom)
   if (type(value) == 'number'and value ~= math.floor(value)) and index ~= 7 then 
     local value = string.sub(value, 2)
   end
-
-  if string.len(tostring(value)) > 4 then local value = util.round(value, 0.01) end
-  if name then
-      if name == "DEV" then
-        --print ("name", name)
-        local disp_value = " " 
-        if value < 5 then 
-            disp_value = value 
-        elseif value == 5 and params:get("takt_jf") == 2 then 
-            disp_value = "JF" 
-        elseif value == 6 and params:get("takt_wsyn") == 2 then 
-            disp_value = "W/" 
-        elseif value == 7 and params:get("takt_crow") == 2 then 
-            disp_value = "CROW" 
-        else
-            disp_value = disp_value 
-        end
-        value = disp_value 
-        --print ("dev", value)
-      end
-   end
+  if not string.match(value, "lfo") then
+      if string.len(tostring(value)) > 4 then local value = util.round(value, 0.01) end
+      if name then
+          if name == "DEV" then
+            --print ("name", name)
+            local disp_value = " " 
+            if value < 5 then 
+                disp_value = value 
+            elseif value == 5 and params:get("takt_jf") == 2 then 
+                disp_value = "JF" 
+            elseif value == 6 and params:get("takt_wsyn") == 2 then 
+                disp_value = "W/" 
+            elseif value == 7 and params:get("takt_crow") == 2 then 
+                disp_value = "CROW" 
+            else
+                disp_value = disp_value 
+            end
+            value = disp_value 
+            --print ("dev", value)
+          end
+       end
+  end
   
   screen.text_center(value)
   screen.stroke()
@@ -752,8 +755,8 @@ function ui.draw_delay(x, y, index )
 end
 
 
-function ui.midi_screen(params_data, ui_index, tracks, steps)
-
+function ui.midi_screen(tr, params_data, ui_index, tracks, steps)
+   local wsyn_on = false
    local tile = {
       {1, 'NOTE', function(i, _, lock) ui.draw_note(1, 8, params_data,i, ui_index, lock) end },
       {2, 'VEL',  params_data.velocity },
@@ -771,7 +774,6 @@ function ui.midi_screen(params_data, ui_index, tracks, steps)
     
     
    for k, v in pairs(tile) do
-        
       local lock = false
       if params_data.default then
          lock = (lock == false and params_data.default[midi_name_lookup[k]] ~= (k == 1 and params_data.note or v[3]) ) and true or false
@@ -780,15 +782,58 @@ function ui.midi_screen(params_data, ui_index, tracks, steps)
       if v[3] and type(v[3]) == 'function' then
         v[3](v[1], v[2], lock)
       elseif v[3] then
-        if v[1]  > 3 and  v[3] < 0 then 
-          v[3] = '--' 
-        elseif  v[1] == 3 then 
-          v[3] = util.round(util.linlin(1, 256, 1, 16,v[3]),0.01)
-       -- elseif v[1] > 6 then
-         -- local cc = string.sub(v[2], 3)
-          --if tonumber(cc) > 100 then  v[2] = 'CC.'.. string.sub(v[2], 4) end
+        if v[1] == 1 then
+           if ui_index == 2 then 
+                -- adjust ui_index to support chord edit 
+                --print("tile", v[2])
+                ui.tile(v[1], v[2], v[3], ui_index-1, lock , v[1] > 6 and v[1] + 6 or false) 
+           else
+                --print("tile", v[2])
+                ui.tile(v[1], v[2], v[3], ui_index, lock , v[1] > 6 and v[1] + 6 or false)
+           end
+        else
+            if v[1]  > 3 and  v[3] < 0 then 
+              v[3] = '--' 
+            elseif  v[1] == 3 then 
+              v[3] = util.round(util.linlin(1, 256, 1, 16,v[3]),0.01)
+           -- elseif v[1] > 6 then
+             -- local cc = string.sub(v[2], 3)
+              --if tonumber(cc) > 100 then  v[2] = 'CC.'.. string.sub(v[2], 4) end
+            end
+            -- replace CC params with WSYN params
+            if v[1] == 5 and v[3] == 6 then
+                wsyn_on = true
+                ui.tile(v[1], v[2], v[3], ui_index-1, lock , v[1] > 6 and v[1] + 6 or false)
+            elseif v[1] > 6 and wsyn_on then 
+                --print("tile #", v[1])
+                --print("tile name", v[2])
+                --print("wsyn param", wsyn_params_lookup[v[1]-5])
+                --ui.tile(v[1], v[2], v[3], ui_index-1, lock , v[1] > 6 and v[1] + 6 or false)
+                ui.tile(v[1], wsyn_params_lookup[v[1]-5], v[3], ui_index-1, lock , v[1] > 6 and v[1] + 6 or false)
+            else
+                --print("tile #", v[1])
+                --print("tile name", v[2])
+                --print("tile val", v[3])
+                local lfo_name = ""
+                local lfo_tile = 0 
+                for i = 1, 4 do
+                    local target = params:get(i .. "lfo_target") 
+                    --print("lfo", i, "target", target - 1 - ((tr -8) * 6), "v[1]", (v[1] - 6))
+                    --if tonumber(target) - 1 == tonumber(v[1]) - 6 and params:get(i .. "lfo") == 2 then
+                    if target - 1 - ((tr - 8) * 6) == (v[1] - 6) then
+                        --local val = math.floor(math.abs(lfo.scale(lfo[j].slope, -1, 1, 1, 127)))
+                        lfo_name = "lfo " .. i 
+                        lfo_tile = target - 1
+                    end
+                end
+                --print ("val", val)
+                if lfo_tile > 0 then
+                    ui.tile(v[1], v[2], lfo_name, ui_index-1, lock , v[1] > 6 and v[1] + 6 or false)
+                else
+                    ui.tile(v[1], v[2], v[3], ui_index-1, lock , v[1] > 6 and v[1] + 6 or false)
+                end
+            end
         end
-        ui.tile(v[1], v[2], v[3], ui_index, lock , v[1] > 6 and v[1] + 6 or false)
       end
     end
    
